@@ -1,1 +1,1 @@
-# Stats_Python
+# Basic Statistics Module for Python
