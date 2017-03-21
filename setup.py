@@ -6,6 +6,5 @@ setup(name = 'stats_python',
       intervals and stats tests''',
       url = "https://github.com/mukund0299/stats_python",
       author = 'mukun0299',
-      packages = ['stats_python']
+      packages = ['stats_python'],
       )
-      
