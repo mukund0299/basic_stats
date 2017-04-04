@@ -4,7 +4,6 @@
 #TODO: Two Sample Z Test
 #TODO: One Sample T Test
 #TODO: Two Sample T Test
-#TODO: One Variable statistics
 #TODO: Two Variable statistics
 #TODO: Linear Regressions
 #TODO: Plotting (Scatterplots, linear Regressions)
@@ -15,6 +14,7 @@
 import openpyxl
 import mpmath
 import statistics
+import matplotlib
 
 #Normal Model
 def invNorm(area):
@@ -22,11 +22,11 @@ def invNorm(area):
 	result = 0
     #The lower bound is set to -3 because it's unlikely to have something higher than that
 	i = -3
-    #If the result is not between area-0.0001 and area+0.0001, continue to recalculate the area with the new lower bound value
+    #If the result is not between area-0.0001 and area+0.0001, continue to recalculate the area with the new upper bound value
 	while (not((result >= (area-0.000001)) and (result <= (area+0.000001)))):
 		i += 0.00001
 		result = float(0.5*mpmath.erfc(-((i)/mpmath.sqrt(2))))
-    #Return the lower bound value
+    #Return the upper bound value
 	return i
 
 #t distribution
@@ -46,11 +46,14 @@ def invt(area, df):
 			result = 0.5*(mpmath.betainc(0.5,(df/2),0,x2, regularized = True)+1)
 	return i
 
-def sumData(data, multiplier):
-	sumOfValues = 0
-	for i in range(len(data)):
-		data[i] = data[i]*multiplier
+def sumData(data, raiseTo):
+	dataTemp = []
 	for value in data:
+		dataTemp.append(value)
+	sumOfValues = 0
+	for i in range(len(dataTemp)):
+		dataTemp[i] = dataTemp[i]**raiseTo
+	for value in dataTemp:
 		sumOfValues += value
 	return sumOfValues
 
@@ -61,11 +64,12 @@ def oneSampleZInterval(successes, n, confidenceLevel):
 	#Getting Critical value
 	zCritical = -1*invNorm((1-(confidenceLevel/100))/2)
 	#Getting Standard error
-	stError = float(mpmath.sqrt(((pHat)*(1-pHat))/(n)))
-	CLower = pHat - (zCritical*stError)
-	CUpper = pHat + (zCritical*stError)
+	stDev = float(mpmath.sqrt(((pHat)*(1-pHat))/(n)))
+	marError = stDev*zCritical
+	CLower = pHat - marError
+	CUpper = pHat + marError
 	print('p-Hat = ' + str(pHat))
-	print('SE = ' + str(stError))
+	print('ME = ' + str(marError))
 	print('CLower = ' + str(CLower))
 	print('CUpper = ' + str(CUpper))
 
@@ -78,13 +82,14 @@ def twoSampleZInterval(successes1, n1, successes2, n2, confidenceLevel):
 	#Getting critical value
 	zCritical = -1*invNorm((1-(confidenceLevel/100))/2)
 	#Getting Standard error
-	stError = mpmath.sqrt((((pHat1)*(1-pHat1))/n1) + (((pHat2)*(1-pHat2))/n2))
-	CLower = pDiff - zCritical*stError
-	CUpper = pDiff + zCritical*stError
+	stDev = mpmath.sqrt((((pHat1)*(1-pHat1))/n1) + (((pHat2)*(1-pHat2))/n2))
+	marError = zCritical*stDev
+	CLower = pDiff - marError
+	CUpper = pDiff + marError
 	print('p-Hat1 = ' + str(pHat1))
 	print('pHat2 = ' + str(pHat2))
 	print('pDiff = ' + str(pDiff))
-	print('Standard Error  = ' + str(pDiff))
+	print('ME  = ' + str(pDiff))
 	print('Clower = ' + str(CLower))
 	print('CUpper = ' + str(CUpper))
 
@@ -108,12 +113,13 @@ def oneSampleTInterval(src,setSheet,confidenceLevel,column):
 		stDev = (sampleStDev)/(mpmath.sqrt(n))
 		#Getting critical value
 		tCritical = -1*invt(((1-(confidenceLevel/100))/2),df)
-		CLower = mean - tCritical*stDev
-		CUpper = mean + tCritical*stDev
+		stError = stDev*tCritical
+		CLower = mean - stError
+		CUpper = mean + stError
 		print('Mean = ' + str(mean))
 		print('Standard Deviation = ' + str(stDev))
 		print('Critical Value = ' + str(tCritical))
-		print('Margin of Error = ' + str((tCritical*stDev)))
+		print('Standard Error = ' + str(stError))
 		print('Lower limit = ' + str(CLower))
 		print('Upper limit = ' + str(CUpper))
 	except FileNotFoundError:
@@ -122,10 +128,9 @@ def oneSampleTInterval(src,setSheet,confidenceLevel,column):
 		print('Sheet does not exist')
 	except TypeError:
 		print('File contains letters or empty cells')
-	except:
-		print('Error')
 
-def twoSampleTInterval(src, setsheet, confidenceLevel, column1, column2):
+
+def twoSampleTInterval(src, setSheet, confidenceLevel, column1, column2):
 	try:
 		#Opening the workbook and setting the sheet
 		wb = openpyxl.load_workbook(src)
@@ -148,22 +153,33 @@ def twoSampleTInterval(src, setsheet, confidenceLevel, column1, column2):
 		sampleStDev2 = statistics.stdev(data2)
 		n2 = len(dataList2)
 		df2 = n2-1
+		meanDiff = mean1-mean2
+		#BUG: The df calculation is wrong
 		df = (((sampleStDev1**2)/n1)+((sampleStDev2**2)/n2)**2)/((((sampleStDev1**2)/n1)/df1)+(((sampleStDev2**2)/n2)/df2))
 		stDev = float(mpmath.sqrt(((sampleStDev1**2)/n1)+((sampleStDev2**2)/n2)))
 		#Getting critical value
 		tCritical = -1*invt(((1-(confidenceLevel/100))/2),df)
-		CLower = mean - tCritical*stDev
-		CUpper = mean + tCritical*stDev
+		stError = stDev*tCritical
+		CLower = meanDiff - stError
+		CUpper = meanDiff + stError
+		print('Clower = ' + str(CLower))
+		print('CUpper = ' + str(CUpper))
+		print('Difference in mean = ' + str(meanDiff))
+		print('SE = ' + str(stError))
+		print('df = ' + str(df))
+		print('mean1 = ' + str(mean1))
+		print('mean2 = ' + str(mean2))
+		print('stDev1 = ' + str(sampleStDev1))
+		print('stDev2 = ' + str(sampleStDev2))
+		print('n1 = ' + str(n1))
+		print('n2 = ' + str(n2))
 	except FileNotFoundError:
 		print('File not Found')
 	except KeyError:
 		print('Sheet does not exist')
 	except TypeError:
 		print('File contains letters or empty cells')
-	except:
-		print('Error')
 
-#NOTE: Needs to output mean, sum of values, sum of values squared, standard deviation, population standard deviation, n, five number summary, sum of  deviations
 def oneVarStats(src, setSheet, column):
 	try:
 		#Opening the workbook and setting the sheet
@@ -183,9 +199,9 @@ def oneVarStats(src, setSheet, column):
 		sumOfValuesSquared = sumData(data,2)
 		#Five Number summary
 		data.sort()
-		minVal = min(data)
-		q1Val, medianVal,q3Val = 0, 0, 0
-		maxVal = max(data)
+		minVal = data[0]
+		q1Val, medianVal, q3Val = 0, 0, 0
+		maxVal = data[len(data)-1]
 		#If the data has odd number of values
 		if (len(data) % 2 != 0):
 			middleIndex = (len(data)-1)//2
@@ -208,7 +224,7 @@ def oneVarStats(src, setSheet, column):
 		print('Sum of x = ' + str(sumOfValues))
 		print('Sum of squared x = ' + str(sumOfValuesSquared))
 		print('Sample standard deviation = ' + str(sampleStDev))
-		#print('Population standard deviation = ') + str(populationStDev)
+		print('Population standard deviation = ' + str(populationStDev))
 		print('n = ' + str(n))
 		print('Min = ' + str(minVal))
 		print('Q1 = ' + str(q1Val))
@@ -218,5 +234,10 @@ def oneVarStats(src, setSheet, column):
 		print('Sum of squared deviations = ' + str(ssx))
 	except FileNotFoundError:
 		print('File not found')
+	except KeyError:
+		print('Sheet does not exist')
+	except TypeError:
+		print('File contains letters or empty cells')
 
-oneVarStats('C:\\Users\\mukun\\Desktop\\Test.xlsx', 'Sheet1', 0)
+#NOTE: Should output mean, sum of x, sum of x-squared, stDev, Population stDev, n, five number summary for both variables, sum of standard deviations for both variables
+def twoVarStats(src, setSheet, column1, column2):
