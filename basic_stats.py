@@ -1,9 +1,3 @@
-#Without using a package system, setting everything up in one file as separate functions to be used at the user's discretion
-
-#TODO: One Sample Z Test
-#TODO: Two Sample Z Test
-#TODO: One Sample T Test
-#TODO: Two Sample T Test
 #TODO: Test all functions
 
 #IDEA: Create a GUI for the user rather than CLI
@@ -14,21 +8,24 @@ import statistics
 import matplotlib.pyplot as plt
 import pylab
 
+
 #Normal Model
 def invNorm(area):
-    #Setting initial result to zero
+	#Setting initial result to zero
 	result = 0
-    #The lower bound is set to -3 because it's unlikely to have something higher than that
+	#The lower bound is set to -3 because it's unlikely to have something higher than that
 	i = -3
-    #If the result is not between area-0.0001 and area+0.0001, continue to recalculate the area with the new upper bound value
+	#If the result is not between area-0.0001 and area+0.0001, continue to recalculate the area with the new upper bound value
 	while (not((result >= (area-0.000001)) and (result <= (area+0.000001)))):
 		i += 0.00001
 		result = float(0.5*mpmath.erfc(-((i)/mpmath.sqrt(2))))
-    #Return the upper bound value
+	#Return the upper bound value
 	return i
+
 
 def normCdf(x):
 	return float(0.5*mpmath.erfc(-((x)/mpmath.sqrt(2))))
+
 
 #t distribution
 def invt(area, df):
@@ -41,19 +38,21 @@ def invt(area, df):
 		i += 0.00001
 		if (i <= 0):
 			x2 = (df)/((i**2)+df)
-			result = 0.5*mpmath.betainc((df/2),0.5,0,x2, regularized = True)
+			result = 0.5*mpmath.betainc((df/2), 0.5, 0, x2, regularized=True)
 		else:
 			x2 = (i**2)/((i**2)+df)
-			result = 0.5*(mpmath.betainc(0.5,(df/2),0,x2, regularized = True)+1)
+			result = 0.5*(mpmath.betainc(0.5, (df/2), 0, x2, regularized=True)+1)
 	return i
 
-def tCdf(x,df):
+
+def tCdf(x, df):
 	if (x <= 0):
 		x2 = (df)/((x**2)+df)
-		return 0.5*mpmath.betainc((df/2),0.5,0,x2, regularized = True)
+		return 0.5*mpmath.betainc((df/2), 0.5, 0, x2, regularized=True)
 	else:
 		x2 = (x**2)/((x**2)+df)
-		return 0.5*(mpmath.betainc(0.5,(df/2),0,x2, regularized = True)+1)
+		return 0.5*(mpmath.betainc(0.5, (df/2), 0, x2, regularized=True)+1)
+
 
 def sumData(data, raiseTo):
 	dataTemp = []
@@ -65,6 +64,7 @@ def sumData(data, raiseTo):
 	for value in dataTemp:
 		sumOfValues += value
 	return sumOfValues
+
 
 #Confidence Intervals for proportions
 def oneSampleZInterval(successes, n, confidenceLevel):
@@ -81,6 +81,7 @@ def oneSampleZInterval(successes, n, confidenceLevel):
 	print('ME = ' + str(marError))
 	print('CLower = ' + str(CLower))
 	print('CUpper = ' + str(CUpper))
+
 
 def twoSampleZInterval(successes1, n1, successes2, n2, confidenceLevel):
 	#Calculating p from the samples
@@ -102,8 +103,9 @@ def twoSampleZInterval(successes1, n1, successes2, n2, confidenceLevel):
 	print('Clower = ' + str(CLower))
 	print('CUpper = ' + str(CUpper))
 
+
 #Confidence Intervals for means; reading from an excel file
-def oneSampleTInterval(src,setSheet,confidenceLevel,column):
+def oneSampleTInterval(src, setSheet, confidenceLevel, column):
 	try:
 		#Opening the workbook and setting the sheet
 		wb = openpyxl.load_workbook(src)
@@ -121,7 +123,7 @@ def oneSampleTInterval(src,setSheet,confidenceLevel,column):
 		df = n-1
 		stDev = (sampleStDev)/(mpmath.sqrt(n))
 		#Getting critical value
-		tCritical = -1*invt(((1-(confidenceLevel/100))/2),df)
+		tCritical = -1*invt(((1-(confidenceLevel/100))/2), df)
 		stError = stDev*tCritical
 		CLower = mean - stError
 		CUpper = mean + stError
@@ -167,7 +169,7 @@ def twoSampleTInterval(src, setSheet, confidenceLevel, column1, column2):
 		df = (n1+n2)-2
 		stDev = float(mpmath.sqrt(((sampleStDev1**2)/n1)+((sampleStDev2**2)/n2)))
 		#Getting critical value
-		tCritical = -1*invt(((1-(confidenceLevel/100))/2),df)
+		tCritical = -1*invt(((1-(confidenceLevel/100))/2), df)
 		stError = stDev*tCritical
 		CLower = meanDiff - stError
 		CUpper = meanDiff + stError
@@ -189,11 +191,6 @@ def twoSampleTInterval(src, setSheet, confidenceLevel, column1, column2):
 	except TypeError:
 		print('File contains letters or empty cells')
 
-#Stats Tests
-#One Sample Z Test
-def oneSampleZTests(successes,n):
-	p-hat = successes/n
-	stValue = 
 
 def oneVarStats(src, setSheet, column):
 	try:
@@ -210,8 +207,8 @@ def oneVarStats(src, setSheet, column):
 		sampleStDev = statistics.stdev(data)
 		populationStDev = statistics.pstdev(data)
 		n = len(data)
-		sumOfValues = sumData(data,1)
-		sumOfValuesSquared = sumData(data,2)
+		sumOfValues = sumData(data, 1)
+		sumOfValuesSquared = sumData(data, 2)
 		#Five Number summary
 		data.sort()
 		minVal = data[0]
@@ -237,7 +234,7 @@ def oneVarStats(src, setSheet, column):
 			ssx += (value-mean)**2
 		#Histogram and Boxplot
 		fig = plt.figure()
-		ax =  fig.add_subplot(111)
+		ax = fig.add_subplot(111)
 		ax.hist(data)
 		fig2 = plt.figure()
 		ax2 = fig2.add_subplot(111)
@@ -262,7 +259,7 @@ def oneVarStats(src, setSheet, column):
 	except TypeError:
 		print('File contains letters or empty cells')
 
-#NOTE: Should output mean, sum of x, sum of x-squared, stDev, Population stDev, n, five number summary for both variables, sum of standard deviations for both variables
+
 def linReg(src, setSheet, column1, column2):
 	try:
 		#Opening the workbook and setting the sheet
@@ -279,8 +276,8 @@ def linReg(src, setSheet, column1, column2):
 			data2.append(float(cellObj.value))
 		if (len(data1) != len(data2)):
 			raise Exception('Data is not of equal n')
-		(m,b) = pylab.polyfit(data1,data2,1)
-		yp = pylab.polyval([m,b],data1)
+		(m, b) = pylab.polyfit(data1, data2, 1)
+		yp = pylab.polyval([m, b], data1)
 		mean1 = statistics.mean(data1)
 		mean2 = statistics.mean(data2)
 		stDev1 = statistics.stdev(data1)
@@ -293,8 +290,8 @@ def linReg(src, setSheet, column1, column2):
 		print('r-squared = ' + str(rSquared))
 		fig = plt.figure()
 		ax = fig.add_subplot(111)
-		ax.plot(data1,data2,'ro')
-		ax.plot(data1,yp)
+		ax.plot(data1, data2, 'ro')
+		ax.plot(data1, yp)
 		plt.show()
 	except FileNotFoundError:
 		print('File not found')
@@ -305,6 +302,7 @@ def linReg(src, setSheet, column1, column2):
 	except Exception as inst:
 		print(inst)
 
+
 def main():
 	print('Enter the corresponding number for the function')
 	print('1 - One Variable Statistics')
@@ -313,7 +311,7 @@ def main():
 	print('4 - Two Sample Z Interval')
 	print('5 - One Sample T Interval')
 	print('6 - Two Sample T Interval')
-	options = ['1','2','3','4','5','6']
+	options = ['1', '2', '3', '4', '5', '6']
 	choice = input()
 	while (choice not in options):
 		print('Choice is invalid')
@@ -323,20 +321,20 @@ def main():
 		path = input('Enter path of Excel file\n')
 		sheet = input('Enter name of sheet\n')
 		columnNumber = int(input('Enter column number\n'))
-		oneVarStats(path,sheet,columnNumber)
+		oneVarStats(path, sheet, columnNumber)
 	elif (choice == '2'):
 		print('Selected Linear Regression')
 		path = input('Enter path of Excel file\n')
 		sheet = input('Enter name of sheet\n')
 		columnNumber1 = int(input('Enter column number 1\n'))
 		columnNumber2 = int(input('Enter column number 2\n'))
-		linReg(path, sheet, columnNumber1,columnNumber2)
+		linReg(path, sheet, columnNumber1, columnNumber2)
 	elif (choice == '3'):
 		print('Selected One Sample Z Interval')
 		numberSucc = int(input('Enter number of successes\n'))
 		sampleSize = int(input('Enter n\n'))
 		confidence = int(input('Enter confidence level\n'))
-		oneSampleZInterval(numberSucc,sampleSize,confidence)
+		oneSampleZInterval(numberSucc, sampleSize, confidence)
 	elif (choice == '4'):
 		print('Selected Two Sample Z Interval')
 		numberSucc1 = int(input('Enter number of successes for sample 1\n'))
@@ -344,7 +342,7 @@ def main():
 		numberSucc2 = int(input('Enter number of successes for sample 2\n'))
 		sampleSize2 = int(input('Enter n2\n'))
 		confidence = int(input('Enter confidence level\n'))
-		twoSampleZInterval(numberSucc1,sampleSize1,numberSucc2,sampleSize2,confidence)
+		twoSampleZInterval(numberSucc1, sampleSize1, numberSucc2, sampleSize2, confidence)
 	elif (choice == '5'):
 		print('Selected One Sample t Interval')
 		path = input('Enter path of Excel file\n')
@@ -359,6 +357,7 @@ def main():
 		columnNumber1 = int(input('Enter column number of sample 1\n'))
 		columnNumber2 = int(input('Enter column number of sample 2\n'))
 		confidence = int(input('Enter confidence level\n'))
-		twoSampleTInterval(path,sheet,confidence,columnNumber1,columnNumber2)
+		twoSampleTInterval(path, sheet, confidence, columnNumber1, columnNumber2)
+
 
 main()
