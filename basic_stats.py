@@ -4,9 +4,6 @@
 #TODO: Two Sample Z Test
 #TODO: One Sample T Test
 #TODO: Two Sample T Test
-#TODO: Two Variable statistics
-#TODO: Linear Regressions
-#TODO: Plotting (Scatterplots, linear Regressions)
 #TODO: Test all functions
 
 #IDEA: Create a GUI for the user rather than CLI
@@ -14,7 +11,8 @@
 import openpyxl
 import mpmath
 import statistics
-import matplotlib
+import matplotlib.pyplot as plt
+import pylab
 
 #Normal Model
 def invNorm(area):
@@ -28,6 +26,9 @@ def invNorm(area):
 		result = float(0.5*mpmath.erfc(-((i)/mpmath.sqrt(2))))
     #Return the upper bound value
 	return i
+
+def normCdf(x):
+	return float(0.5*mpmath.erfc(-((x)/mpmath.sqrt(2))))
 
 #t distribution
 def invt(area, df):
@@ -45,6 +46,14 @@ def invt(area, df):
 			x2 = (i**2)/((i**2)+df)
 			result = 0.5*(mpmath.betainc(0.5,(df/2),0,x2, regularized = True)+1)
 	return i
+
+def tCdf(x,df):
+	if (x <= 0):
+		x2 = (df)/((x**2)+df)
+		return 0.5*mpmath.betainc((df/2),0.5,0,x2, regularized = True)
+	else:
+		x2 = (x**2)/((x**2)+df)
+		return 0.5*(mpmath.betainc(0.5,(df/2),0,x2, regularized = True)+1)
 
 def sumData(data, raiseTo):
 	dataTemp = []
@@ -144,7 +153,7 @@ def twoSampleTInterval(src, setSheet, confidenceLevel, column1, column2):
 			data1.append(float(cellObj.value))
 		for cellObj in dataList2:
 			data2.append(float(cellObj.value))
-		#Getting mean,Standard Deviation,n and df for both samples
+		#Getting mean, Standard Deviation, n and df for both samples
 		mean1 = statistics.mean(data1)
 		sampleStDev1 = statistics.stdev(data1)
 		n1 = len(dataList1)
@@ -155,7 +164,7 @@ def twoSampleTInterval(src, setSheet, confidenceLevel, column1, column2):
 		df2 = n2-1
 		meanDiff = mean1-mean2
 		#BUG: The df calculation is wrong
-		df = (((sampleStDev1**2)/n1)+((sampleStDev2**2)/n2)**2)/((((sampleStDev1**2)/n1)/df1)+(((sampleStDev2**2)/n2)/df2))
+		df = (n1+n2)-2
 		stDev = float(mpmath.sqrt(((sampleStDev1**2)/n1)+((sampleStDev2**2)/n2)))
 		#Getting critical value
 		tCritical = -1*invt(((1-(confidenceLevel/100))/2),df)
@@ -179,6 +188,12 @@ def twoSampleTInterval(src, setSheet, confidenceLevel, column1, column2):
 		print('Sheet does not exist')
 	except TypeError:
 		print('File contains letters or empty cells')
+
+#Stats Tests
+#One Sample Z Test
+def oneSampleZTests(successes,n):
+	p-hat = successes/n
+	stValue = 
 
 def oneVarStats(src, setSheet, column):
 	try:
@@ -220,6 +235,13 @@ def oneVarStats(src, setSheet, column):
 		ssx = 0
 		for value in data:
 			ssx += (value-mean)**2
+		#Histogram and Boxplot
+		fig = plt.figure()
+		ax =  fig.add_subplot(111)
+		ax.hist(data)
+		fig2 = plt.figure()
+		ax2 = fig2.add_subplot(111)
+		ax2.boxplot(data)
 		print('Mean = ' + str(mean))
 		print('Sum of x = ' + str(sumOfValues))
 		print('Sum of squared x = ' + str(sumOfValuesSquared))
@@ -232,6 +254,7 @@ def oneVarStats(src, setSheet, column):
 		print('Q3 = ' + str(q3Val))
 		print('Max = ' + str(maxVal))
 		print('Sum of squared deviations = ' + str(ssx))
+		plt.show()
 	except FileNotFoundError:
 		print('File not found')
 	except KeyError:
@@ -240,4 +263,102 @@ def oneVarStats(src, setSheet, column):
 		print('File contains letters or empty cells')
 
 #NOTE: Should output mean, sum of x, sum of x-squared, stDev, Population stDev, n, five number summary for both variables, sum of standard deviations for both variables
-def twoVarStats(src, setSheet, column1, column2):
+def linReg(src, setSheet, column1, column2):
+	try:
+		#Opening the workbook and setting the sheet
+		wb = openpyxl.load_workbook(src)
+		sheet = wb.get_sheet_by_name(setSheet)
+		#Getting a list of the cells in order to calculate length
+		dataList1 = list(sheet.columns)[column1]
+		dataList2 = list(sheet.columns)[column2]
+		#Populating a list with data from the cells
+		data1, data2 = [], []
+		for cellObj in dataList1:
+			data1.append(float(cellObj.value))
+		for cellObj in dataList2:
+			data2.append(float(cellObj.value))
+		if (len(data1) != len(data2)):
+			raise Exception('Data is not of equal n')
+		(m,b) = pylab.polyfit(data1,data2,1)
+		yp = pylab.polyval([m,b],data1)
+		mean1 = statistics.mean(data1)
+		mean2 = statistics.mean(data2)
+		stDev1 = statistics.stdev(data1)
+		stDev2 = statistics.stdev(data2)
+		r = (m*stDev1)/stDev2
+		rSquared = r**2
+		print('a = ' + str(b))
+		print('b = ' + str(m))
+		print('r = ' + str(r))
+		print('r-squared = ' + str(rSquared))
+		fig = plt.figure()
+		ax = fig.add_subplot(111)
+		ax.plot(data1,data2,'ro')
+		ax.plot(data1,yp)
+		plt.show()
+	except FileNotFoundError:
+		print('File not found')
+	except KeyError:
+		print('Sheet does not exist')
+	except TypeError:
+		print('File contains letters or empty cells')
+	except Exception as inst:
+		print(inst)
+
+def main():
+	print('Enter the corresponding number for the function')
+	print('1 - One Variable Statistics')
+	print('2 - Linear Regression')
+	print('3 - One Sample Z Interval')
+	print('4 - Two Sample Z Interval')
+	print('5 - One Sample T Interval')
+	print('6 - Two Sample T Interval')
+	options = ['1','2','3','4','5','6']
+	choice = input()
+	while (choice not in options):
+		print('Choice is invalid')
+		choice = input('Enter choice\n')
+	if (choice == '1'):
+		print('Selected One Variable Statistics')
+		path = input('Enter path of Excel file\n')
+		sheet = input('Enter name of sheet\n')
+		columnNumber = int(input('Enter column number\n'))
+		oneVarStats(path,sheet,columnNumber)
+	elif (choice == '2'):
+		print('Selected Linear Regression')
+		path = input('Enter path of Excel file\n')
+		sheet = input('Enter name of sheet\n')
+		columnNumber1 = int(input('Enter column number 1\n'))
+		columnNumber2 = int(input('Enter column number 2\n'))
+		linReg(path, sheet, columnNumber1,columnNumber2)
+	elif (choice == '3'):
+		print('Selected One Sample Z Interval')
+		numberSucc = int(input('Enter number of successes\n'))
+		sampleSize = int(input('Enter n\n'))
+		confidence = int(input('Enter confidence level\n'))
+		oneSampleZInterval(numberSucc,sampleSize,confidence)
+	elif (choice == '4'):
+		print('Selected Two Sample Z Interval')
+		numberSucc1 = int(input('Enter number of successes for sample 1\n'))
+		sampleSize1 = int(input('Enter n1\n'))
+		numberSucc2 = int(input('Enter number of successes for sample 2\n'))
+		sampleSize2 = int(input('Enter n2\n'))
+		confidence = int(input('Enter confidence level\n'))
+		twoSampleZInterval(numberSucc1,sampleSize1,numberSucc2,sampleSize2,confidence)
+	elif (choice == '5'):
+		print('Selected One Sample t Interval')
+		path = input('Enter path of Excel file\n')
+		sheet = input('Enter sheet name\n')
+		columnNumber = int(input('Enter column number\n'))
+		confidence = int(input('Enter confidence level\n'))
+		oneSampleTInterval(path, sheet, confidence, columnNumber)
+	elif (choice == '6'):
+		print('Selected Two Sample t Interval')
+		path = input('Enter path of Excel file\n')
+		sheet = input('Enter sheet name\n')
+		columnNumber1 = int(input('Enter column number of sample 1\n'))
+		columnNumber2 = int(input('Enter column number of sample 2\n'))
+		confidence = int(input('Enter confidence level\n'))
+		twoSampleTInterval(path,sheet,confidence,columnNumber1,columnNumber2)
+
+main()
