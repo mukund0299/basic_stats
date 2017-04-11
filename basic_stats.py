@@ -8,6 +8,10 @@ import statistics
 import matplotlib.pyplot as plt
 import pylab
 
+from tkinter import *
+from tkinter import ttk
+from tkinter.filedialog import askopenfile
+
 
 #Normal Model
 def invNorm(area):
@@ -21,10 +25,6 @@ def invNorm(area):
 		result = float(0.5*mpmath.erfc(-((i)/mpmath.sqrt(2))))
 	#Return the upper bound value
 	return i
-
-
-def normCdf(x):
-	return float(0.5*mpmath.erfc(-((x)/mpmath.sqrt(2))))
 
 
 #t distribution
@@ -45,15 +45,6 @@ def invt(area, df):
 	return i
 
 
-def tCdf(x, df):
-	if (x <= 0):
-		x2 = (df)/((x**2)+df)
-		return 0.5*mpmath.betainc((df/2), 0.5, 0, x2, regularized=True)
-	else:
-		x2 = (x**2)/((x**2)+df)
-		return 0.5*(mpmath.betainc(0.5, (df/2), 0, x2, regularized=True)+1)
-
-
 def sumData(data, raiseTo):
 	dataTemp = []
 	for value in data:
@@ -66,42 +57,109 @@ def sumData(data, raiseTo):
 	return sumOfValues
 
 
-#Confidence Intervals for proportions
-def oneSampleZInterval(successes, n, confidenceLevel):
-	#Calculating p from the sample
-	pHat = successes/n
-	#Getting Critical value
-	zCritical = -1*invNorm((1-(confidenceLevel/100))/2)
-	#Getting Standard error
-	stDev = float(mpmath.sqrt(((pHat)*(1-pHat))/(n)))
-	marError = stDev*zCritical
-	CLower = pHat - marError
-	CUpper = pHat + marError
-	print('p-Hat = ' + str(pHat))
-	print('ME = ' + str(marError))
-	print('CLower = ' + str(CLower))
-	print('CUpper = ' + str(CUpper))
+class OneSampleZInterval(object):
+	def __init__(self, master):
+		#Setting up the main window and central frame
+		top = self.top = Toplevel(master)
+		self.frame = Frame(top)
+		self.frame.grid(column=0, row=0, sticky=(N, W, E, S))
+		self.frame.columnconfigure(0, weight=1)
+		self.frame.rowconfigure(0, weight=1)
+		#Creating Labels for the inputs
+		self.successesLabel = Label(self.frame, text='Enter number of successes')
+		self.nLabel = Label(self.frame, text='Enter size of sample')
+		self.confLabel = Label(self.frame, text='Enter confidence level (0-100)')
+		self.successesLabel.grid(row=0, sticky=E)
+		self.nLabel.grid(row=1, sticky=E)
+		self.confLabel.grid(row=2, sticky=E)
+		#Creating input dialogs and gridding them
+		self.successesInput = Entry(self.frame)
+		self.nInput = Entry(self.frame)
+		self.confInput = Entry(self.frame)
+		self.successesInput.grid(row=0, column=1)
+		self.nInput.grid(row=1, column=1)
+		self.confInput.grid(row=2, column=1)
+		#Creating Button to retrieve all values
+		self.complete = Button(self.frame, text='Submit', command=self.cleanup)
+		self.complete.grid(columnspan=2)
+
+	def cleanup(self):
+		self.successesVal = int(self.successesInput.get())
+		self.nVal = int(self.nInput.get())
+		self.confVal = int(self.confInput.get())
+		self.oneSampleZInterval(self.successesVal, self.nVal, self.confVal)
+		self.top.destroy()
+
+	def oneSampleZInterval(self, successes, n, confidenceLevel):
+		#Calculating p from the sample
+		self.pHat = successes/n
+		#Getting Critical value
+		self.zCritical = -1*invNorm((1-(confidenceLevel/100))/2)
+		#Getting Standard error
+		self.stDev = float(mpmath.sqrt(((self.pHat)*(1-self.pHat))/(n)))
+		self.marError = self.stDev*self.zCritical
+		self.CLower = self.pHat - self.marError
+		self.CUpper = self.pHat + self.marError
+		self.output = ('p-Hat = ' + str(self.pHat) + '\n' + 'ME = ' + str(self.marError) + '\n' + 'CLower = ' + str(self.CLower) + '\n' + 'CUpper = ' + str(self.CUpper))
 
 
-def twoSampleZInterval(successes1, n1, successes2, n2, confidenceLevel):
-	#Calculating p from the samples
-	pHat1 = successes1/n1
-	pHat2 = successes2/n2
-	#Getting the difference in p
-	pDiff = pHat1-pHat2
-	#Getting critical value
-	zCritical = -1*invNorm((1-(confidenceLevel/100))/2)
-	#Getting Standard error
-	stDev = mpmath.sqrt((((pHat1)*(1-pHat1))/n1) + (((pHat2)*(1-pHat2))/n2))
-	marError = zCritical*stDev
-	CLower = pDiff - marError
-	CUpper = pDiff + marError
-	print('p-Hat1 = ' + str(pHat1))
-	print('pHat2 = ' + str(pHat2))
-	print('pDiff = ' + str(pDiff))
-	print('ME  = ' + str(pDiff))
-	print('Clower = ' + str(CLower))
-	print('CUpper = ' + str(CUpper))
+class TwoSampleZInterval(object):
+	def __init__(self, master):
+		#Setting up the main window and central frame
+		top = self.top = Toplevel(master)
+		self.frame = Frame(top)
+		self.frame.grid(column=0, row=0, sticky=(N, W, E, S))
+		self.frame.columnconfigure(0, weight=1)
+		self.frame.rowconfigure(0, weight=1)
+		#Creating Labels for the inputs
+		self.successesLabel1 = Label(self.frame, text='Enter number of successes for sample 1')
+		self.nLabel1 = Label(self.frame, text='Enter size of sample 1')
+		self.successesLabel2 = Label(self.frame, text='Enter number of successes for sample 2')
+		self.nLabel2 = Label(self.frame, text='Enter size of sample 2')
+		self.confLabel = Label(self.frame, text='Enter confidence level (0-100)')
+		self.successesLabel1.grid(row=0, sticky=E)
+		self.nLabel1.grid(row=1, sticky=E)
+		self.successesLabel2.grid(row=2, sticky=E)
+		self.nLabel2.grid(row=3, sticky=E)
+		self.confLabel.grid(row=4, sticky=E)
+		#Creating input dialogs and gridding them
+		self.successesInput1 = Entry(self.frame)
+		self.nInput1 = Entry(self.frame)
+		self.successesInput2 = Entry(self.frame)
+		self.nInput2 = Entry(self.frame)
+		self.confInput = Entry(self.frame)
+		self.successesInput1.grid(row=0, column=1)
+		self.nInput1.grid(row=1, column=1)
+		self.successesInput2.grid(row=2, column=1)
+		self.nInput2.grid(row=3, column=1)
+		self.confInput.grid(row=4, column=1)
+		#Creating Button to retrieve all values
+		self.complete = Button(self.frame, text='Submit', command=self.cleanup)
+		self.complete.grid(row=5, column=1)
+
+	def cleanup(self):
+		self.successesVal1 = int(self.successesInput1.get())
+		self.nVal1 = int(self.nInput1.get())
+		self.successesVal2 = int(self.successesInput2.get())
+		self.nVal2 = int(self.nInput2.get())
+		self.confVal = int(self.confInput.get())
+		self.twoSampleZInterval(self.successesVal1, self.nVal1, self.successesVal2, self.nVal2, self.confVal)
+		self.top.destroy()
+
+	def twoSampleZInterval(self, successes1, n1, successes2, n2, confidenceLevel):
+		#Calculating p from the samples
+		self.pHat1 = successes1/n1
+		self.pHat2 = successes2/n2
+		#Getting the difference in p
+		self.pDiff = self.pHat1-self.pHat2
+		#Getting critical value
+		self.zCritical = -1*invNorm((1-(confidenceLevel/100))/2)
+		#Getting Standard error
+		self.stDev = mpmath.sqrt((((self.pHat1)*(1-self.pHat1))/n1) + (((self.pHat2)*(1-self.pHat2))/n2))
+		self.marError = self.zCritical*self.stDev
+		self.CLower = self.pDiff - self.marError
+		self.CUpper = self.pDiff + self.marError
+		self.output = ('p-Hat1 = ' + str(self.pHat1) + '\n' + 'pHat2 = ' + str(self.pHat2) + '\n' + 'pDiff = ' + str(self.pDiff) + '\n' + 'ME  = ' + str(self.pDiff) + '\n' + 'Clower = ' + str(self.CLower) + '\n' + 'CUpper = ' + str(self.CUpper))
 
 
 #Confidence Intervals for means; reading from an excel file
@@ -192,72 +250,102 @@ def twoSampleTInterval(src, setSheet, confidenceLevel, column1, column2):
 		print('File contains letters or empty cells')
 
 
-def oneVarStats(src, setSheet, column):
-	try:
-		#Opening the workbook and setting the sheet
-		wb = openpyxl.load_workbook(src)
-		sheet = wb.get_sheet_by_name(setSheet)
-		#Getting a list of the cells in order to calculate length
-		dataList = list(sheet.columns)[column]
-		#Populating a list with data from the cells
-		data = []
-		for cellObj in dataList:
-			data.append(float(cellObj.value))
-		mean = statistics.mean(data)
-		sampleStDev = statistics.stdev(data)
-		populationStDev = statistics.pstdev(data)
-		n = len(data)
-		sumOfValues = sumData(data, 1)
-		sumOfValuesSquared = sumData(data, 2)
-		#Five Number summary
-		data.sort()
-		minVal = data[0]
-		q1Val, medianVal, q3Val = 0, 0, 0
-		maxVal = data[len(data)-1]
-		#If the data has odd number of values
-		if (len(data) % 2 != 0):
-			middleIndex = (len(data)-1)//2
-			medianVal = data[middleIndex]
-			lowerData = data[0:middleIndex]
-			q1Val = statistics.median(lowerData)
-			upperData = data[middleIndex+1:len(data)]
-			q3Val = statistics.median(upperData)
-		else:
-			medianVal = statistics.median(data)
-			lowerData = data[0:len(data)//2]
-			q1Val = statistics.median(lowerData)
-			upperData = data[len(data)//2:len(data)]
-			q3Val = statistics.median(upperData)
-		#Sum of squared deviations
-		ssx = 0
-		for value in data:
-			ssx += (value-mean)**2
-		#Histogram and Boxplot
-		fig = plt.figure()
-		ax = fig.add_subplot(111)
-		ax.hist(data)
-		fig2 = plt.figure()
-		ax2 = fig2.add_subplot(111)
-		ax2.boxplot(data)
-		print('Mean = ' + str(mean))
-		print('Sum of x = ' + str(sumOfValues))
-		print('Sum of squared x = ' + str(sumOfValuesSquared))
-		print('Sample standard deviation = ' + str(sampleStDev))
-		print('Population standard deviation = ' + str(populationStDev))
-		print('n = ' + str(n))
-		print('Min = ' + str(minVal))
-		print('Q1 = ' + str(q1Val))
-		print('Median = ' + str(medianVal))
-		print('Q3 = ' + str(q3Val))
-		print('Max = ' + str(maxVal))
-		print('Sum of squared deviations = ' + str(ssx))
-		plt.show()
-	except FileNotFoundError:
-		print('File not found')
-	except KeyError:
-		print('Sheet does not exist')
-	except TypeError:
-		print('File contains letters or empty cells')
+class OneVarStats(object):
+	def __init__(self, master):
+		#Setting up the main window and central frame
+		top = self.top = Toplevel(master)
+		self.frame = Frame(top)
+		self.frame.grid(column=0, row=0, sticky=(N, W, E, S))
+		self.frame.columnconfigure(0, weight=1)
+		self.frame.rowconfigure(0, weight=1)
+		#Creating Labels for the inputs
+		self.sheetLabel = Label(self.frame, text='Enter the name of the sheet')
+		self.columnLabel = Label(self.frame, text='Enter column number')
+		self.sheetLabel.grid(row=0, sticky=E)
+		self.columnLabel.grid(row=1, sticky=E)
+		#Creating inputs
+		self.srcVAL = filedialog.askopenfilename(title="Locate Excel file", filetypes=(("excel files", "*.xlsx"), ("all files", "*.*")))
+		self.sheetVal = Entry(self.frame)
+		self.sheetVal.grid(row=0, column=1)
+		self.columnVal = Entry(self.frame)
+		self.columnVal.grid(row=1, column=1)
+		#Creating Button to retrieve all values
+		self.complete = Button(self.frame, text='Submit', command=self.cleanup)
+		self.complete.grid(row=2, column=1)
+
+	def cleanup(self):
+		self.source = self.srcVAL
+		self.sheetName = self.sheetVal
+		self.column = int(self.columnVal.get())
+		self.oneVarStats(self.source, self.sheetName, self.column)
+		self.top.destroy()
+
+	def oneVarStats(src, setSheet, column):
+		try:
+			#Opening the workbook and setting the sheet
+			self.wb = openpyxl.load_workbook(src)
+			self.sheet = wb.get_sheet_by_name(setSheet)
+			#Getting a list of the cells in order to calculate length
+			self.dataList = list(self.sheet.columns)[column]
+			#Populating a list with data from the cells
+			self.data = []
+			for cellObj in self.dataList:
+				self.data.append(float(cellObj.value))
+			self.mean = statistics.mean(self.data)
+			self.sampleStDev = statistics.stdev(self.data)
+			self.populationStDev = statistics.pstdev(self.data)
+			self.n = len(self.data)
+			self.sumOfValues = sumData(self.data, 1)
+			self.sumOfValuesSquared = sumData(selfdata, 2)
+			#Five Number summary
+			self.data.sort()
+			self.minVal = self.data[0]
+			self.q1Val, self.medianVal, self.q3Val = 0, 0, 0
+			self.maxVal = self.data[len(self.data)-1]
+			#If the data has odd number of values
+			if (len(self.data) % 2 != 0):
+				self.middleIndex = (len(self.data)-1)//2
+				self.medianVal = self.data[self.middleIndex]
+				self.lowerData = self.data[0:self.middleIndex]
+				self.q1Val = statistics.median(self.lowerData)
+				self.upperData = data[self.middleIndex+1:len(self.data)]
+				self.q3Val = statistics.median(self.upperData)
+			else:
+				self.medianVal = statistics.median(self.data)
+				self.lowerData = self.data[0:len(self.data)//2]
+				self.q1Val = statistics.median(self.lowerData)
+				self.upperData = self.data[len(self.data)//2:len(self.data)]
+				self.q3Val = statistics.median(self.upperData)
+			#Sum of squared deviations
+			self.ssx = 0
+			for value in self.data:
+				self.ssx += (value-self.mean)**2
+			#Histogram and Boxplot
+			self.fig = plt.figure()
+			self.ax = self.fig.add_subplot(111)
+			self.ax.hist(self.data)
+			self.fig2 = plt.figure()
+			self.ax2 = self.fig2.add_subplot(111)
+			self.ax2.boxplot(self.data)
+			self.output = ('Mean = ' + str(mean))
+			print('Sum of x = ' + str(sumOfValues))
+			print('Sum of squared x = ' + str(sumOfValuesSquared))
+			print('Sample standard deviation = ' + str(sampleStDev))
+			print('Population standard deviation = ' + str(populationStDev))
+			print('n = ' + str(n))
+			print('Min = ' + str(minVal))
+			print('Q1 = ' + str(q1Val))
+			print('Median = ' + str(medianVal))
+			print('Q3 = ' + str(q3Val))
+			print('Max = ' + str(maxVal))
+			print('Sum of squared deviations = ' + str(ssx))
+			plt.show()
+		except FileNotFoundError:
+			print('File not found')
+		except KeyError:
+			print('Sheet does not exist')
+		except TypeError:
+			print('File contains letters or empty cells')
 
 
 def linReg(src, setSheet, column1, column2):
@@ -303,61 +391,60 @@ def linReg(src, setSheet, column1, column2):
 		print(inst)
 
 
-def main():
-	print('Enter the corresponding number for the function')
-	print('1 - One Variable Statistics')
-	print('2 - Linear Regression')
-	print('3 - One Sample Z Interval')
-	print('4 - Two Sample Z Interval')
-	print('5 - One Sample T Interval')
-	print('6 - Two Sample T Interval')
-	options = ['1', '2', '3', '4', '5', '6']
-	choice = input()
-	while (choice not in options):
-		print('Choice is invalid')
-		choice = input('Enter choice\n')
-	if (choice == '1'):
-		print('Selected One Variable Statistics')
-		path = input('Enter path of Excel file\n')
-		sheet = input('Enter name of sheet\n')
-		columnNumber = int(input('Enter column number\n'))
-		oneVarStats(path, sheet, columnNumber)
-	elif (choice == '2'):
-		print('Selected Linear Regression')
-		path = input('Enter path of Excel file\n')
-		sheet = input('Enter name of sheet\n')
-		columnNumber1 = int(input('Enter column number 1\n'))
-		columnNumber2 = int(input('Enter column number 2\n'))
-		linReg(path, sheet, columnNumber1, columnNumber2)
-	elif (choice == '3'):
-		print('Selected One Sample Z Interval')
-		numberSucc = int(input('Enter number of successes\n'))
-		sampleSize = int(input('Enter n\n'))
-		confidence = int(input('Enter confidence level\n'))
-		oneSampleZInterval(numberSucc, sampleSize, confidence)
-	elif (choice == '4'):
-		print('Selected Two Sample Z Interval')
-		numberSucc1 = int(input('Enter number of successes for sample 1\n'))
-		sampleSize1 = int(input('Enter n1\n'))
-		numberSucc2 = int(input('Enter number of successes for sample 2\n'))
-		sampleSize2 = int(input('Enter n2\n'))
-		confidence = int(input('Enter confidence level\n'))
-		twoSampleZInterval(numberSucc1, sampleSize1, numberSucc2, sampleSize2, confidence)
-	elif (choice == '5'):
-		print('Selected One Sample t Interval')
-		path = input('Enter path of Excel file\n')
-		sheet = input('Enter sheet name\n')
-		columnNumber = int(input('Enter column number\n'))
-		confidence = int(input('Enter confidence level\n'))
-		oneSampleTInterval(path, sheet, confidence, columnNumber)
-	elif (choice == '6'):
-		print('Selected Two Sample t Interval')
-		path = input('Enter path of Excel file\n')
-		sheet = input('Enter sheet name\n')
-		columnNumber1 = int(input('Enter column number of sample 1\n'))
-		columnNumber2 = int(input('Enter column number of sample 2\n'))
-		confidence = int(input('Enter confidence level\n'))
-		twoSampleTInterval(path, sheet, confidence, columnNumber1, columnNumber2)
+class main(object):
+	def __init__(self, master):
+		self.master = master
+		# *******Menu Bar********
+		self.menubar = Menu(master)
+		self.master.config(menu=self.menubar)
+		#Adding stats calculations sub-menu
+		self.statCalc = Menu(self.menubar)
+		self.menubar.add_cascade(label='Stat Calculations', menu=self.statCalc)
+		self.statCalc.add_command(label='One Variable Statistics', command=self.initOneVarStats)
+		# self.statCalc.add_command(label='Linear Regression', command=initLinReg)
+		#Adding confidence intervals sub-menu
+		self.confInt = Menu(self.menubar)
+		self.menubar.add_cascade(label='Confidence Intervals', menu=self.confInt)
+		self.confInt.add_command(label='One Sample Z Interval', command=self.initOneSampleZInterval)
+		self.confInt.add_command(label='Two Sample Z Interval', command=self.initTwoSampleZInterval)
+		self.confInt.add_separator()
+		# self.confInt.add_command(label='One Sample T Interval', command=initOneSampleTTest)
+		# self.confInt.add_command(label='Two Sample T Interval', command=initTwoSampleTTest)
+		# *******output area********
+		self.resultLabel = Label(master, text='Output')
+		self.result = Text(master, state='disabled')
+		self.result.insert('1.0', 'Result will be shown here')
+		self.resultLabel.pack()
+		self.result.pack()
+
+	def initOneSampleZInterval(self):
+		self.w = OneSampleZInterval(self.master)
+		self.master.wait_window(self.w.top)
+		self.result['state'] = 'normal'
+		self.result.delete('1.0', END)
+		self.result.insert('1.0', self.w.output)
+		self.result['state'] = 'disabled'
+
+	def initTwoSampleZInterval(self):
+		self.w = TwoSampleZInterval(self.master)
+		self.master.wait_window(self.w.top)
+		self.result['state'] = 'normal'
+		self.result.delete('1.0', END)
+		self.result.insert('1.0', self.w.output)
+		self.result['state'] = 'disabled'
+
+	def initOneVarStats(self):
+		self.w = OneVarStats(self.master)
+		self.master.wait_window(self.w.top)
+		self.result['state'] = 'normal'
+		self.result.delete('1.0', END)
+		self.result.insert('1.0', self.w.output)
+		self.result['state'] = 'disabled'
 
 
-main()
+# *******Main Window********
+root = Tk()
+root.title('Basic Statistics')
+root.geometry('300x500')
+m = main(root)
+root.mainloop()
