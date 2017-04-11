@@ -10,7 +10,7 @@ import pylab
 
 from tkinter import *
 from tkinter import ttk
-from tkinter.filedialog import askopenfile
+from tkinter.filedialog import *
 
 
 #Normal Model
@@ -91,16 +91,24 @@ class OneSampleZInterval(object):
 		self.top.destroy()
 
 	def oneSampleZInterval(self, successes, n, confidenceLevel):
+		#Setting the output to normal then clearing it
+		m.result['state'] = 'normal'
+		m.result.delete(1.0, END)
 		#Calculating p from the sample
 		self.pHat = successes/n
 		#Getting Critical value
 		self.zCritical = -1*invNorm((1-(confidenceLevel/100))/2)
-		#Getting Standard error
+		#Getting Standard deviation
 		self.stDev = float(mpmath.sqrt(((self.pHat)*(1-self.pHat))/(n)))
 		self.marError = self.stDev*self.zCritical
 		self.CLower = self.pHat - self.marError
 		self.CUpper = self.pHat + self.marError
-		self.output = ('p-Hat = ' + str(self.pHat) + '\n' + 'ME = ' + str(self.marError) + '\n' + 'CLower = ' + str(self.CLower) + '\n' + 'CUpper = ' + str(self.CUpper))
+		m.result.insert(1.0, 'p-Hat = ' + str(self.pHat) + '\n')
+		m.result.insert(2.0, 'StDev = ' + str(self.stDev) + '\n')
+		m.result.insert(3.0, 'ME = ' + str(self.marError) + '\n')
+		m.result.insert(4.0, 'CLower = ' + str(self.CLower) + '\n')
+		m.result.insert(5.0, 'CUpper = ' + str(self.CUpper))
+		m.result['state'] = 'disabled'
 
 
 class TwoSampleZInterval(object):
@@ -147,6 +155,9 @@ class TwoSampleZInterval(object):
 		self.top.destroy()
 
 	def twoSampleZInterval(self, successes1, n1, successes2, n2, confidenceLevel):
+		#Setting the output to normal then clearing it
+		m.result['state'] = 'normal'
+		m.result.delete(1.0, END)
 		#Calculating p from the samples
 		self.pHat1 = successes1/n1
 		self.pHat2 = successes2/n2
@@ -159,44 +170,77 @@ class TwoSampleZInterval(object):
 		self.marError = self.zCritical*self.stDev
 		self.CLower = self.pDiff - self.marError
 		self.CUpper = self.pDiff + self.marError
-		self.output = ('p-Hat1 = ' + str(self.pHat1) + '\n' + 'pHat2 = ' + str(self.pHat2) + '\n' + 'pDiff = ' + str(self.pDiff) + '\n' + 'ME  = ' + str(self.pDiff) + '\n' + 'Clower = ' + str(self.CLower) + '\n' + 'CUpper = ' + str(self.CUpper))
+		m.result.insert(1.0, 'p-Hat1 = ' + str(self.pHat1) + '\n')
+		m.result.insert(2.0, 'pHat2 = ' + str(self.pHat2) + '\n')
+		m.result.insert(3.0, 'pDiff = ' + str(self.pDiff) + '\n')
+		m.result.insert(4.0, 'ME  = ' + str(self.pDiff) + '\n')
+		m.result.insert(5.0, 'Clower = ' + str(self.CLower) + '\n')
+		m.result.insert(6.0, 'CUpper = ' + str(self.CUpper))
+		m.result['state'] = 'disabled'
 
 
 #Confidence Intervals for means; reading from an excel file
-def oneSampleTInterval(src, setSheet, confidenceLevel, column):
-	try:
-		#Opening the workbook and setting the sheet
-		wb = openpyxl.load_workbook(src)
-		sheet = wb.get_sheet_by_name(setSheet)
-		#Getting a list of the cells in order to calculate length
-		dataList = list(sheet.columns)[column]
-		#Populating a list with data from the cells
-		data = []
-		for cellObj in dataList:
-			data.append(float(cellObj.value))
-		#Getting mean,Standard Deviation,n and df
-		mean = statistics.mean(data)
-		sampleStDev = statistics.stdev(data)
-		n = len(dataList)
-		df = n-1
-		stDev = (sampleStDev)/(mpmath.sqrt(n))
-		#Getting critical value
-		tCritical = -1*invt(((1-(confidenceLevel/100))/2), df)
-		stError = stDev*tCritical
-		CLower = mean - stError
-		CUpper = mean + stError
-		print('Mean = ' + str(mean))
-		print('Standard Deviation = ' + str(stDev))
-		print('Critical Value = ' + str(tCritical))
-		print('Standard Error = ' + str(stError))
-		print('Lower limit = ' + str(CLower))
-		print('Upper limit = ' + str(CUpper))
-	except FileNotFoundError:
-		print('File not Found')
-	except KeyError:
-		print('Sheet does not exist')
-	except TypeError:
-		print('File contains letters or empty cells')
+class OneSampleTInterval(object):
+	def __init__(self, master):
+		#Setting up the main window and central frame
+		top = self.top = Toplevel(master)
+		self.frame = Frame(top)
+		self.frame.grid(column=0, row=0, sticky=(N, W, E, S))
+		self.frame.columnconfigure(0, weight=1)
+		self.frame.rowconfigure(0, weight=1)
+		#Creating Labels for the inputs
+		self.sheetLabel = Label(self.frame, text='Enter the name of the sheet')
+		self.columnLabel1 = Label(self.frame, text='Enter column number 1')
+		self.confLabel = Label(self.frame, text='Enter confidence level (0-100)')
+		self.sheetLabel.grid(row=0, sticky=E)
+		self.columnLabel1.grid(row=1, sticky=E)
+		self.confLabel.grid(row=2, sticky=E)
+		#Creating inputs
+		self.srcVAL = filedialog.askopenfilename(title="Locate Excel file", filetypes=(("excel files", "*.xlsx"), ("all files", "*.*")))
+		self.sheetVal = Entry(self.frame)
+		self.sheetVal.grid(row=0, column=1)
+		self.columnVal1 = Entry(self.frame)
+		self.columnVal1.grid(row=1, column=1)
+		self.confVal = Entry(self.frame)
+		self.confVal.grid(row=2, column=1)
+		#Creating Button to retrieve all values
+		self.complete = Button(self.frame, text='Submit', command=self.cleanup)
+		self.complete.grid(row=3, column=1)
+
+	def oneSampleTInterval(self, src, setSheet, confidenceLevel, column):
+		try:
+			#Opening the workbook and setting the sheet
+			wb = openpyxl.load_workbook(src)
+			sheet = wb.get_sheet_by_name(setSheet)
+			#Getting a list of the cells in order to calculate length
+			dataList = list(sheet.columns)[column]
+			#Populating a list with data from the cells
+			data = []
+			for cellObj in dataList:
+				data.append(float(cellObj.value))
+			#Getting mean,Standard Deviation,n and df
+			mean = statistics.mean(data)
+			sampleStDev = statistics.stdev(data)
+			n = len(dataList)
+			df = n-1
+			stDev = (sampleStDev)/(mpmath.sqrt(n))
+			#Getting critical value
+			tCritical = -1*invt(((1-(confidenceLevel/100))/2), df)
+			stError = stDev*tCritical
+			CLower = mean - stError
+			CUpper = mean + stError
+			print('Mean = ' + str(mean))
+			print('Standard Deviation = ' + str(stDev))
+			print('Critical Value = ' + str(tCritical))
+			print('Standard Error = ' + str(stError))
+			print('Lower limit = ' + str(CLower))
+			print('Upper limit = ' + str(CUpper))
+		except FileNotFoundError:
+			print('File not Found')
+		except KeyError:
+			print('Sheet does not exist')
+		except TypeError:
+			print('File contains letters or empty cells')
 
 
 def twoSampleTInterval(src, setSheet, confidenceLevel, column1, column2):
@@ -275,16 +319,19 @@ class OneVarStats(object):
 
 	def cleanup(self):
 		self.source = self.srcVAL
-		self.sheetName = self.sheetVal
+		self.sheetName = self.sheetVal.get()
 		self.column = int(self.columnVal.get())
 		self.oneVarStats(self.source, self.sheetName, self.column)
 		self.top.destroy()
 
-	def oneVarStats(src, setSheet, column):
+	def oneVarStats(self, src, setSheet, column):
 		try:
+			#Setting the output to normal then clearing it
+			m.result['state'] = 'normal'
+			m.result.delete(1.0, END)
 			#Opening the workbook and setting the sheet
 			self.wb = openpyxl.load_workbook(src)
-			self.sheet = wb.get_sheet_by_name(setSheet)
+			self.sheet = self.wb.get_sheet_by_name(setSheet)
 			#Getting a list of the cells in order to calculate length
 			self.dataList = list(self.sheet.columns)[column]
 			#Populating a list with data from the cells
@@ -296,7 +343,7 @@ class OneVarStats(object):
 			self.populationStDev = statistics.pstdev(self.data)
 			self.n = len(self.data)
 			self.sumOfValues = sumData(self.data, 1)
-			self.sumOfValuesSquared = sumData(selfdata, 2)
+			self.sumOfValuesSquared = sumData(self.data, 2)
 			#Five Number summary
 			self.data.sort()
 			self.minVal = self.data[0]
@@ -327,68 +374,111 @@ class OneVarStats(object):
 			self.fig2 = plt.figure()
 			self.ax2 = self.fig2.add_subplot(111)
 			self.ax2.boxplot(self.data)
-			self.output = ('Mean = ' + str(mean))
-			print('Sum of x = ' + str(sumOfValues))
-			print('Sum of squared x = ' + str(sumOfValuesSquared))
-			print('Sample standard deviation = ' + str(sampleStDev))
-			print('Population standard deviation = ' + str(populationStDev))
-			print('n = ' + str(n))
-			print('Min = ' + str(minVal))
-			print('Q1 = ' + str(q1Val))
-			print('Median = ' + str(medianVal))
-			print('Q3 = ' + str(q3Val))
-			print('Max = ' + str(maxVal))
-			print('Sum of squared deviations = ' + str(ssx))
+			#Appending results to output box
+			m.result.insert(1.0, 'Mean = ' + str(self.mean) + '\n')
+			m.result.insert(2.0, 'Sum of x = ' + str(self.sumOfValues) + '\n')
+			m.result.insert(3.0, 'Sum of squared x = ' + str(self.sumOfValuesSquared) + '\n')
+			m.result.insert(4.0, 'Sample standard deviation = ' + str(self.sampleStDev) + '\n')
+			m.result.insert(5.0, 'Population standard deviation = ' + str(self.populationStDev) + '\n')
+			m.result.insert(6.0, 'n = ' + str(self.n) + '\n')
+			m.result.insert(7.0, 'Min = ' + str(self.minVal) + '\n')
+			m.result.insert(8.0, 'Q1 = ' + str(self.q1Val) + '\n')
+			m.result.insert(9.0, 'Median = ' + str(self.medianVal) + '\n')
+			m.result.insert(10.0, 'Q3 = ' + str(self.q3Val) + '\n')
+			m.result.insert(11.0, 'Max = ' + str(self.maxVal) + '\n')
+			m.result.insert(12.0, 'Sum of squared deviations = ' + str(self.ssx) + '\n')
+			m.result['state'] = 'disabled'
 			plt.show()
 		except FileNotFoundError:
-			print('File not found')
+			m.result.insert(1.0, 'File not found')
 		except KeyError:
-			print('Sheet does not exist')
+			m.result.insert(1.0, 'Sheet does not exist')
 		except TypeError:
-			print('File contains letters or empty cells')
+			m.result.insert(1.0, 'File contains letters or empty cells')
+		except Exception as inst:
+			m.result.insert(1.0, inst)
 
 
-def linReg(src, setSheet, column1, column2):
-	try:
-		#Opening the workbook and setting the sheet
-		wb = openpyxl.load_workbook(src)
-		sheet = wb.get_sheet_by_name(setSheet)
-		#Getting a list of the cells in order to calculate length
-		dataList1 = list(sheet.columns)[column1]
-		dataList2 = list(sheet.columns)[column2]
-		#Populating a list with data from the cells
-		data1, data2 = [], []
-		for cellObj in dataList1:
-			data1.append(float(cellObj.value))
-		for cellObj in dataList2:
-			data2.append(float(cellObj.value))
-		if (len(data1) != len(data2)):
-			raise Exception('Data is not of equal n')
-		(m, b) = pylab.polyfit(data1, data2, 1)
-		yp = pylab.polyval([m, b], data1)
-		mean1 = statistics.mean(data1)
-		mean2 = statistics.mean(data2)
-		stDev1 = statistics.stdev(data1)
-		stDev2 = statistics.stdev(data2)
-		r = (m*stDev1)/stDev2
-		rSquared = r**2
-		print('a = ' + str(b))
-		print('b = ' + str(m))
-		print('r = ' + str(r))
-		print('r-squared = ' + str(rSquared))
-		fig = plt.figure()
-		ax = fig.add_subplot(111)
-		ax.plot(data1, data2, 'ro')
-		ax.plot(data1, yp)
-		plt.show()
-	except FileNotFoundError:
-		print('File not found')
-	except KeyError:
-		print('Sheet does not exist')
-	except TypeError:
-		print('File contains letters or empty cells')
-	except Exception as inst:
-		print(inst)
+class LinReg(object):
+	def __init__(self, master):
+		#Setting up the main window and central frame
+		top = self.top = Toplevel(master)
+		self.frame = Frame(top)
+		self.frame.grid(column=0, row=0, sticky=(N, W, E, S))
+		self.frame.columnconfigure(0, weight=1)
+		self.frame.rowconfigure(0, weight=1)
+		#Creating Labels for the inputs
+		self.sheetLabel = Label(self.frame, text='Enter the name of the sheet')
+		self.columnLabel1 = Label(self.frame, text='Enter column number 1')
+		self.columnLabel2 = Label(self.frame, text='Enter column number 2')
+		self.sheetLabel.grid(row=0, sticky=E)
+		self.columnLabel1.grid(row=1, sticky=E)
+		self.columnLabel2.grid(row=2, sticky=E)
+		#Creating inputs
+		self.srcVAL = filedialog.askopenfilename(title="Locate Excel file", filetypes=(("excel files", "*.xlsx"), ("all files", "*.*")))
+		self.sheetVal = Entry(self.frame)
+		self.sheetVal.grid(row=0, column=1)
+		self.columnVal1 = Entry(self.frame)
+		self.columnVal1.grid(row=1, column=1)
+		self.columnVal2 = Entry(self.frame)
+		self.columnVal2.grid(row=2, column=1)
+		#Creating Button to retrieve all values
+		self.complete = Button(self.frame, text='Submit', command=self.cleanup)
+		self.complete.grid(row=3, column=1)
+
+	def cleanup(self):
+		self.source = self.srcVAL
+		self.sheetName = self.sheetVal.get()
+		self.column1 = int(self.columnVal1.get())
+		self.column2 = int(self.columnVal2.get())
+		self.linReg(self.source, self.sheetName, self.column1, self.column2)
+		self.top.destroy()
+
+	def linReg(self, src, setSheet, column1, column2):
+		try:
+			#Setting the output to normal then clearing it
+			m.result['state'] = 'normal'
+			m.result.delete(1.0, END)
+			#Opening the workbook and setting the sheet
+			self.wb = openpyxl.load_workbook(src)
+			self.sheet = self.wb.get_sheet_by_name(setSheet)
+			#Getting a list of the cells in order to calculate length
+			self.dataList1 = list(self.sheet.columns)[column1]
+			self.dataList2 = list(self.sheet.columns)[column2]
+			#Populating a list with data from the cells
+			self.data1, self.data2 = [], []
+			for cellObj in self.dataList1:
+				self.data1.append(float(cellObj.value))
+			for cellObj in self.dataList2:
+				self.data2.append(float(cellObj.value))
+			if (len(self.data1) != len(self.data2)):
+				raise Exception('Data is not of equal n')
+			(self.m, self.b) = pylab.polyfit(self.data1, self.data2, 1)
+			self.yp = pylab.polyval([self.m, self.b], self.data1)
+			self.mean1 = statistics.mean(self.data1)
+			self.mean2 = statistics.mean(self.data2)
+			self.stDev1 = statistics.stdev(self.data1)
+			self.stDev2 = statistics.stdev(self.data2)
+			self.r = (self.m*self.stDev1)/self.stDev2
+			self.rSquared = self.r**2
+			m.result.insert(1.0, 'a = ' + str(self.b) + '\n')
+			m.result.insert(2.0, 'b = ' + str(self.m) + '\n')
+			m.result.insert(3.0, 'r = ' + str(self.r) + '\n')
+			m.result.insert(4.0, 'r-squared = ' + str(self.rSquared) + '\n')
+			m.result['state'] = 'disabled'
+			self.fig = plt.figure()
+			self.ax = self.fig.add_subplot(111)
+			self.ax.plot(self.data1, self.data2, 'ro')
+			self.ax.plot(self.data1, self.yp)
+			plt.show()
+		except FileNotFoundError:
+			m.result.insert(1.0, 'File not found')
+		except KeyError:
+			m.result.insert(1.0, 'Sheet does not exist')
+		except TypeError:
+			m.result.insert(1.0, 'File contains letters or empty cells')
+		except Exception as inst:
+			m.result.insert(1.0, inst)
 
 
 class main(object):
@@ -398,12 +488,12 @@ class main(object):
 		self.menubar = Menu(master)
 		self.master.config(menu=self.menubar)
 		#Adding stats calculations sub-menu
-		self.statCalc = Menu(self.menubar)
+		self.statCalc = Menu(self.menubar, tearoff=0)
 		self.menubar.add_cascade(label='Stat Calculations', menu=self.statCalc)
 		self.statCalc.add_command(label='One Variable Statistics', command=self.initOneVarStats)
-		# self.statCalc.add_command(label='Linear Regression', command=initLinReg)
+		self.statCalc.add_command(label='Linear Regression', command=self.initLinReg)
 		#Adding confidence intervals sub-menu
-		self.confInt = Menu(self.menubar)
+		self.confInt = Menu(self.menubar, tearoff=0)
 		self.menubar.add_cascade(label='Confidence Intervals', menu=self.confInt)
 		self.confInt.add_command(label='One Sample Z Interval', command=self.initOneSampleZInterval)
 		self.confInt.add_command(label='Two Sample Z Interval', command=self.initTwoSampleZInterval)
@@ -420,31 +510,23 @@ class main(object):
 	def initOneSampleZInterval(self):
 		self.w = OneSampleZInterval(self.master)
 		self.master.wait_window(self.w.top)
-		self.result['state'] = 'normal'
-		self.result.delete('1.0', END)
-		self.result.insert('1.0', self.w.output)
-		self.result['state'] = 'disabled'
 
 	def initTwoSampleZInterval(self):
 		self.w = TwoSampleZInterval(self.master)
 		self.master.wait_window(self.w.top)
-		self.result['state'] = 'normal'
-		self.result.delete('1.0', END)
-		self.result.insert('1.0', self.w.output)
-		self.result['state'] = 'disabled'
 
 	def initOneVarStats(self):
 		self.w = OneVarStats(self.master)
 		self.master.wait_window(self.w.top)
-		self.result['state'] = 'normal'
-		self.result.delete('1.0', END)
-		self.result.insert('1.0', self.w.output)
-		self.result['state'] = 'disabled'
+
+	def initLinReg(self):
+		self.w = LinReg(self.master)
+		self.master.wait_window(self.w.top)
 
 
 # *******Main Window********
 root = Tk()
 root.title('Basic Statistics')
-root.geometry('300x500')
+root.geometry('400x300')
 m = main(root)
 root.mainloop()
