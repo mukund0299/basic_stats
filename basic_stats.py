@@ -1,10 +1,10 @@
 #TODO: Test all functions
 
-#IDEA: Create a GUI for the user rather than CLI
-
 import openpyxl
 import mpmath
 import statistics
+import matplotlib
+matplotlib.use("TkAgg")
 import matplotlib.pyplot as plt
 import pylab
 
@@ -91,24 +91,27 @@ class OneSampleZInterval(object):
 		self.top.destroy()
 
 	def oneSampleZInterval(self, successes, n, confidenceLevel):
-		#Setting the output to normal then clearing it
-		m.result['state'] = 'normal'
-		m.result.delete(1.0, END)
-		#Calculating p from the sample
-		self.pHat = successes/n
-		#Getting Critical value
-		self.zCritical = -1*invNorm((1-(confidenceLevel/100))/2)
-		#Getting Standard deviation
-		self.stDev = float(mpmath.sqrt(((self.pHat)*(1-self.pHat))/(n)))
-		self.marError = self.stDev*self.zCritical
-		self.CLower = self.pHat - self.marError
-		self.CUpper = self.pHat + self.marError
-		m.result.insert(1.0, 'p-Hat = ' + str(self.pHat) + '\n')
-		m.result.insert(2.0, 'StDev = ' + str(self.stDev) + '\n')
-		m.result.insert(3.0, 'ME = ' + str(self.marError) + '\n')
-		m.result.insert(4.0, 'CLower = ' + str(self.CLower) + '\n')
-		m.result.insert(5.0, 'CUpper = ' + str(self.CUpper))
-		m.result['state'] = 'disabled'
+		try:
+			#Setting the output to normal then clearing it
+			m.result['state'] = 'normal'
+			m.result.delete(1.0, END)
+			#Calculating p from the sample
+			self.pHat = successes/n
+			#Getting Critical value
+			self.zCritical = -1*invNorm((1-(confidenceLevel/100))/2)
+			#Getting Standard deviation
+			self.stDev = float(mpmath.sqrt(((self.pHat)*(1-self.pHat))/(n)))
+			self.marError = self.stDev*self.zCritical
+			self.CLower = self.pHat - self.marError
+			self.CUpper = self.pHat + self.marError
+			m.result.insert(1.0, 'p-Hat = ' + str(self.pHat) + '\n')
+			m.result.insert(2.0, 'StDev = ' + str(self.stDev) + '\n')
+			m.result.insert(3.0, 'ME = ' + str(self.marError) + '\n')
+			m.result.insert(4.0, 'CLower = ' + str(self.CLower) + '\n')
+			m.result.insert(5.0, 'CUpper = ' + str(self.CUpper))
+			m.result['state'] = 'disabled'
+		except Exception as inst:
+			m.result.insert(1.0, inst)
 
 
 class TwoSampleZInterval(object):
@@ -155,29 +158,31 @@ class TwoSampleZInterval(object):
 		self.top.destroy()
 
 	def twoSampleZInterval(self, successes1, n1, successes2, n2, confidenceLevel):
-		#Setting the output to normal then clearing it
-		m.result['state'] = 'normal'
-		m.result.delete(1.0, END)
-		#Calculating p from the samples
-		self.pHat1 = successes1/n1
-		self.pHat2 = successes2/n2
-		#Getting the difference in p
-		self.pDiff = self.pHat1-self.pHat2
-		#Getting critical value
-		self.zCritical = -1*invNorm((1-(confidenceLevel/100))/2)
-		#Getting Standard error
-		self.stDev = mpmath.sqrt((((self.pHat1)*(1-self.pHat1))/n1) + (((self.pHat2)*(1-self.pHat2))/n2))
-		self.marError = self.zCritical*self.stDev
-		self.CLower = self.pDiff - self.marError
-		self.CUpper = self.pDiff + self.marError
-		m.result.insert(1.0, 'p-Hat1 = ' + str(self.pHat1) + '\n')
-		m.result.insert(2.0, 'pHat2 = ' + str(self.pHat2) + '\n')
-		m.result.insert(3.0, 'pDiff = ' + str(self.pDiff) + '\n')
-		m.result.insert(4.0, 'ME  = ' + str(self.pDiff) + '\n')
-		m.result.insert(5.0, 'Clower = ' + str(self.CLower) + '\n')
-		m.result.insert(6.0, 'CUpper = ' + str(self.CUpper))
-		m.result['state'] = 'disabled'
-
+		try:
+			#Setting the output to normal then clearing it
+			m.result['state'] = 'normal'
+			m.result.delete(1.0, END)
+			#Calculating p from the samples
+			self.pHat1 = successes1/n1
+			self.pHat2 = successes2/n2
+			#Getting the difference in p
+			self.pDiff = self.pHat1-self.pHat2
+			#Getting critical value
+			self.zCritical = -1*invNorm((1-(confidenceLevel/100))/2)
+			#Getting Standard error
+			self.stDev = mpmath.sqrt((((self.pHat1)*(1-self.pHat1))/n1) + (((self.pHat2)*(1-self.pHat2))/n2))
+			self.marError = self.zCritical*self.stDev
+			self.CLower = self.pDiff - self.marError
+			self.CUpper = self.pDiff + self.marError
+			m.result.insert(1.0, 'p-Hat1 = ' + str(self.pHat1) + '\n')
+			m.result.insert(2.0, 'pHat2 = ' + str(self.pHat2) + '\n')
+			m.result.insert(3.0, 'pDiff = ' + str(self.pDiff) + '\n')
+			m.result.insert(4.0, 'ME  = ' + str(self.pDiff) + '\n')
+			m.result.insert(5.0, 'Clower = ' + str(self.CLower) + '\n')
+			m.result.insert(6.0, 'CUpper = ' + str(self.CUpper))
+			m.result['state'] = 'disabled'
+		except Exception as inst:
+			m.result.insert(1.0, inst)
 
 #Confidence Intervals for means; reading from an excel file
 class OneSampleTInterval(object):
@@ -190,7 +195,7 @@ class OneSampleTInterval(object):
 		self.frame.rowconfigure(0, weight=1)
 		#Creating Labels for the inputs
 		self.sheetLabel = Label(self.frame, text='Enter the name of the sheet')
-		self.columnLabel1 = Label(self.frame, text='Enter column number 1')
+		self.columnLabel1 = Label(self.frame, text='Enter column number')
 		self.confLabel = Label(self.frame, text='Enter confidence level (0-100)')
 		self.sheetLabel.grid(row=0, sticky=E)
 		self.columnLabel1.grid(row=1, sticky=E)
@@ -206,92 +211,147 @@ class OneSampleTInterval(object):
 		#Creating Button to retrieve all values
 		self.complete = Button(self.frame, text='Submit', command=self.cleanup)
 		self.complete.grid(row=3, column=1)
+	def cleanup(self):
+		self.source = self.srcVAL
+		self.sheetName = self.sheetVal.get()
+		self.columnNum = int(self.columnVal1.get())
+		self.confLevel = int(self.confVal.get())
+		self.oneSampleTInterval(self.source, self.sheetName, self.confLevel, self.columnNum)
+		self.top.destroy()
 
 	def oneSampleTInterval(self, src, setSheet, confidenceLevel, column):
 		try:
+			#Setting the output to normal then clearing it
+			m.result['state'] = 'normal'
+			m.result.delete(1.0, END)
 			#Opening the workbook and setting the sheet
-			wb = openpyxl.load_workbook(src)
-			sheet = wb.get_sheet_by_name(setSheet)
+			self.wb = openpyxl.load_workbook(src)
+			self.sheet = self.wb.get_sheet_by_name(setSheet)
 			#Getting a list of the cells in order to calculate length
-			dataList = list(sheet.columns)[column]
+			self.dataList = list(self.sheet.columns)[column]
 			#Populating a list with data from the cells
-			data = []
-			for cellObj in dataList:
-				data.append(float(cellObj.value))
+			self.data = []
+			for cellObj in self.dataList:
+				self.data.append(float(cellObj.value))
 			#Getting mean,Standard Deviation,n and df
-			mean = statistics.mean(data)
-			sampleStDev = statistics.stdev(data)
-			n = len(dataList)
-			df = n-1
-			stDev = (sampleStDev)/(mpmath.sqrt(n))
+			self.mean = statistics.mean(self.data)
+			self.sampleStDev = statistics.stdev(self.data)
+			self.n = len(self.dataList)
+			self.df = self.n-1
+			self.stDev = (self.sampleStDev)/(mpmath.sqrt(self.n))
 			#Getting critical value
-			tCritical = -1*invt(((1-(confidenceLevel/100))/2), df)
-			stError = stDev*tCritical
-			CLower = mean - stError
-			CUpper = mean + stError
-			print('Mean = ' + str(mean))
-			print('Standard Deviation = ' + str(stDev))
-			print('Critical Value = ' + str(tCritical))
-			print('Standard Error = ' + str(stError))
-			print('Lower limit = ' + str(CLower))
-			print('Upper limit = ' + str(CUpper))
+			self.tCritical = -1*invt(((1-(confidenceLevel/100))/2), self.df)
+			self.stError = self.stDev*self.tCritical
+			self.CLower = self.mean - self.stError
+			self.CUpper = self.mean + self.stError
+			m.result.insert(1.0, 'Mean = ' + str(self.mean) + '\n')
+			m.result.insert(2.0, 'Standard Deviation = ' + str(self.stDev) + '\n')
+			m.result.insert(3.0, 'Critical Value = ' + str(self.tCritical) + '\n')
+			m.result.insert(4.0, 'Standard Error = ' + str(self.stError) + '\n')
+			m.result.insert(5.0, 'Lower limit = ' + str(self.CLower) + '\n')
+			m.result.insert(6.0, 'Upper limit = ' + str(self.CUpper) + '\n')
+			m.result['state'] = 'disabled'
 		except FileNotFoundError:
-			print('File not Found')
+			m.result.insert(1.0, 'File not Found')
 		except KeyError:
-			print('Sheet does not exist')
+			m.result.insert(1.0, 'Sheet does not exist')
 		except TypeError:
-			print('File contains letters or empty cells')
+			m.result.insert(1.0, 'File contains letters or empty cells')
+		except Exception as inst:
+			m.result.insert(1.0, inst)
 
+class TwoSampleTInterval(object):
+	def __init__(self, master):
+		#Setting up the main window and central frame
+		top = self.top = Toplevel(master)
+		self.frame = Frame(top)
+		self.frame.grid(column=0, row=0, sticky=(N, W, E, S))
+		self.frame.columnconfigure(0, weight=1)
+		self.frame.rowconfigure(0, weight=1)
+		#Creating Labels for the inputs
+		self.sheetLabel = Label(self.frame, text='Enter the name of the sheet')
+		self.columnLabel1 = Label(self.frame, text='Enter column number 1')
+		self.columnLabel2 = Label(self.frame, text='Enter column number 2')
+		self.confLabel = Label(self.frame, text='Enter confidence level (0-100)')
+		self.sheetLabel.grid(row=0, sticky=E)
+		self.columnLabel1.grid(row=1, sticky=E)
+		self.columnLabel1.grid(row=2, sticky=E)
+		self.confLabel.grid(row=3, sticky=E)
+		#Creating inputs
+		self.srcVAL = filedialog.askopenfilename(title="Locate Excel file", filetypes=(("excel files", "*.xlsx"), ("all files", "*.*")))
+		self.sheetVal = Entry(self.frame)
+		self.sheetVal.grid(row=0, column=1)
+		self.columnVal1 = Entry(self.frame)
+		self.columnVal1.grid(row=1, column=1)
+		self.columnVal2 = Entry(self.frame)
+		self.columnVal2.grid(row=2, column=1)
+		self.confVal = Entry(self.frame)
+		self.confVal.grid(row=3, column=1)
+		#Creating Button to retrieve all values
+		self.complete = Button(self.frame, text='Submit', command=self.cleanup)
+		self.complete.grid(row=4, column=1)
 
-def twoSampleTInterval(src, setSheet, confidenceLevel, column1, column2):
-	try:
-		#Opening the workbook and setting the sheet
-		wb = openpyxl.load_workbook(src)
-		sheet = wb.get_sheet_by_name(setSheet)
-		#Getting a list of the cells in order to calculate length
-		dataList1 = list(sheet.columns)[column1]
-		dataList2 = list(sheet.columns)[column2]
-		#Populating a list with data from the cells
-		data1, data2 = [], []
-		for cellObj in dataList1:
-			data1.append(float(cellObj.value))
-		for cellObj in dataList2:
-			data2.append(float(cellObj.value))
-		#Getting mean, Standard Deviation, n and df for both samples
-		mean1 = statistics.mean(data1)
-		sampleStDev1 = statistics.stdev(data1)
-		n1 = len(dataList1)
-		df1 = n1-1
-		mean2 = statistics.mean(data2)
-		sampleStDev2 = statistics.stdev(data2)
-		n2 = len(dataList2)
-		df2 = n2-1
-		meanDiff = mean1-mean2
-		#BUG: The df calculation is wrong
-		df = (n1+n2)-2
-		stDev = float(mpmath.sqrt(((sampleStDev1**2)/n1)+((sampleStDev2**2)/n2)))
-		#Getting critical value
-		tCritical = -1*invt(((1-(confidenceLevel/100))/2), df)
-		stError = stDev*tCritical
-		CLower = meanDiff - stError
-		CUpper = meanDiff + stError
-		print('Clower = ' + str(CLower))
-		print('CUpper = ' + str(CUpper))
-		print('Difference in mean = ' + str(meanDiff))
-		print('SE = ' + str(stError))
-		print('df = ' + str(df))
-		print('mean1 = ' + str(mean1))
-		print('mean2 = ' + str(mean2))
-		print('stDev1 = ' + str(sampleStDev1))
-		print('stDev2 = ' + str(sampleStDev2))
-		print('n1 = ' + str(n1))
-		print('n2 = ' + str(n2))
-	except FileNotFoundError:
-		print('File not Found')
-	except KeyError:
-		print('Sheet does not exist')
-	except TypeError:
-		print('File contains letters or empty cells')
+	def cleanup(self):
+		self.source = self.srcVAL
+		self.sheetName = self.sheetVal.get()
+		self.columnNum1 = int(self.columnVal1.get())
+		self.columnNum2 = int(self.columnVal2.get())
+		self.confLevel = int(self.confVal.get())
+		self.twoSampleTInterval(self.source, self.sheetName, self.confLevel, self.columnNum1, self.columnNum2)
+		self.top.destroy()
+
+	def twoSampleTInterval(self, src, setSheet, confidenceLevel, column1, column2):
+		try:
+			#Opening the workbook and setting the sheet
+			self.wb = openpyxl.load_workbook(src)
+			self.sheet = self.wb.get_sheet_by_name(setSheet)
+			#Getting a list of the cells in order to calculate length
+			self.dataList1 = list(self.sheet.columns)[column1]
+			self.dataList2 = list(self.sheet.columns)[column2]
+			#Populating a list with data from the cells
+			self.data1, self.data2 = [], []
+			for cellObj in self.dataList1:
+				self.data1.append(float(cellObj.value))
+			for cellObj in self.dataList2:
+				self.data2.append(float(cellObj.value))
+			#Getting mean, Standard Deviation, n and df for both samples
+			self.mean1 = statistics.mean(self.data1)
+			self.sampleStDev1 = statistics.stdev(self.data1)
+			self.n1 = len(self.dataList1)
+			self.df1 = self.n1-1
+			self.mean2 = statistics.mean(self.data2)
+			self.sampleStDev2 = statistics.stdev(self.data2)
+			self.n2 = len(self.dataList2)
+			self.df2 = self.n2-1
+			self.meanDiff = self.mean1-self.mean2
+			#BUG: The df calculation is wrong
+			self.df = (self.n1+self.n2)-2
+			self.stDev = float(mpmath.sqrt(((self.sampleStDev1**2)/self.n1)+((self.sampleStDev2**2)/self.n2)))
+			#Getting critical value
+			self.tCritical = -1*invt(((1-(confidenceLevel/100))/2), self.df)
+			self.stError = self.stDev*self.tCritical
+			self.CLower = self.meanDiff - self.stError
+			self.CUpper = self.meanDiff + self.stError
+			m.result.insert(1.0, 'Clower = ' + str(self.CLower) + '\n')
+			m.result.insert(2.0, 'CUpper = ' + str(self.CUpper) + '\n')
+			m.result.insert(3.0, 'Difference in mean = ' + str(self.meanDiff) + '\n')
+			m.result.insert(4.0, 'SE = ' + str(self.stError) + '\n')
+			m.result.insert(5.0, 'df = ' + str(self.df) + '\n')
+			m.result.insert(6.0, 'mean1 = ' + str(self.mean1) + '\n')
+			m.result.insert(7.0, 'mean2 = ' + str(self.mean2) + '\n')
+			m.result.insert(8.0, 'stDev1 = ' + str(self.sampleStDev1) + '\n')
+			m.result.insert(9.0, 'stDev2 = ' + str(self.sampleStDev2) + '\n')
+			m.result.insert(10.0, 'n1 = ' + str(self.n1) + '\n')
+			m.result.insert(11.0, 'n2 = ' + str(self.n2) + '\n')
+			m.result['state'] - 'disabled'
+		except FileNotFoundError:
+			m.result.insert(1.0, 'File not Found')
+		except KeyError:
+			m.result.insert(1.0, 'Sheet does not exist')
+		except TypeError:
+			m.result.insert(1.0, 'File contains letters or empty cells')
+		except Exception as inst:
+			m.result.insert(1.0, inst)
 
 
 class OneVarStats(object):
@@ -498,8 +558,8 @@ class main(object):
 		self.confInt.add_command(label='One Sample Z Interval', command=self.initOneSampleZInterval)
 		self.confInt.add_command(label='Two Sample Z Interval', command=self.initTwoSampleZInterval)
 		self.confInt.add_separator()
-		# self.confInt.add_command(label='One Sample T Interval', command=initOneSampleTTest)
-		# self.confInt.add_command(label='Two Sample T Interval', command=initTwoSampleTTest)
+		self.confInt.add_command(label='One Sample T Interval', command=self.initOneSampleTInterval)
+		self.confInt.add_command(label='Two Sample T Interval', command=self.initTwoSampleTInterval)
 		# *******output area********
 		self.resultLabel = Label(master, text='Output')
 		self.result = Text(master, state='disabled')
@@ -521,6 +581,14 @@ class main(object):
 
 	def initLinReg(self):
 		self.w = LinReg(self.master)
+		self.master.wait_window(self.w.top)
+
+	def initOneSampleTInterval(self):
+		self.w = OneSampleTInterval(self.master)
+		self.master.wait_window(self.w.top)
+
+	def initTwoSampleTInterval(self):
+		self.w = TwoSampleTInterval(self.master)
 		self.master.wait_window(self.w.top)
 
 
