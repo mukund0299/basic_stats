@@ -84,11 +84,16 @@ class OneSampleZInterval(object):
 		self.complete.grid(columnspan=2)
 
 	def cleanup(self):
-		self.successesVal = int(self.successesInput.get())
-		self.nVal = int(self.nInput.get())
-		self.confVal = int(self.confInput.get())
-		self.oneSampleZInterval(self.successesVal, self.nVal, self.confVal)
-		self.top.destroy()
+		try:
+			self.successesVal = int(self.successesInput.get())
+			self.nVal = int(self.nInput.get())
+			self.confVal = int(self.confInput.get())
+			self.top.destroy()
+			self.oneSampleZInterval(self.successesVal, self.nVal, self.confVal)
+		except Exception as inst:
+			m.result['state'] = 'normal'
+			m.result.insert(1.0, inst)
+			m.result['state'] = 'disabled'
 
 	def oneSampleZInterval(self, successes, n, confidenceLevel):
 		try:
@@ -149,13 +154,18 @@ class TwoSampleZInterval(object):
 		self.complete.grid(row=5, column=1)
 
 	def cleanup(self):
-		self.successesVal1 = int(self.successesInput1.get())
-		self.nVal1 = int(self.nInput1.get())
-		self.successesVal2 = int(self.successesInput2.get())
-		self.nVal2 = int(self.nInput2.get())
-		self.confVal = int(self.confInput.get())
-		self.twoSampleZInterval(self.successesVal1, self.nVal1, self.successesVal2, self.nVal2, self.confVal)
-		self.top.destroy()
+		try:
+			self.successesVal1 = int(self.successesInput1.get())
+			self.nVal1 = int(self.nInput1.get())
+			self.successesVal2 = int(self.successesInput2.get())
+			self.nVal2 = int(self.nInput2.get())
+			self.confVal = int(self.confInput.get())
+			self.top.destroy()
+			self.twoSampleZInterval(self.successesVal1, self.nVal1, self.successesVal2, self.nVal2, self.confVal)
+		except Exception as inst:
+			m.result['state'] = 'normal'
+			m.result.insert(1.0, inst)
+			m.result['state'] = 'disabled'
 
 	def twoSampleZInterval(self, successes1, n1, successes2, n2, confidenceLevel):
 		try:
@@ -212,12 +222,17 @@ class OneSampleTInterval(object):
 		self.complete = Button(self.frame, text='Submit', command=self.cleanup)
 		self.complete.grid(row=3, column=1)
 	def cleanup(self):
-		self.source = self.srcVAL
-		self.sheetName = self.sheetVal.get()
-		self.columnNum = int(self.columnVal1.get())
-		self.confLevel = int(self.confVal.get())
-		self.oneSampleTInterval(self.source, self.sheetName, self.confLevel, self.columnNum)
-		self.top.destroy()
+		try:
+			self.source = self.srcVAL
+			self.sheetName = self.sheetVal.get()
+			self.columnNum = int(self.columnVal1.get())
+			self.confLevel = int(self.confVal.get())
+			self.top.destroy()
+			self.oneSampleTInterval(self.source, self.sheetName, self.confLevel, self.columnNum)
+		except Exception as inst:
+			m.result['state'] = 'normal'
+			m.result.insert(1.0, inst)
+			m.result['state'] = 'disabled'
 
 	def oneSampleTInterval(self, src, setSheet, confidenceLevel, column):
 		try:
@@ -292,13 +307,18 @@ class TwoSampleTInterval(object):
 		self.complete.grid(row=4, column=1)
 
 	def cleanup(self):
-		self.source = self.srcVAL
-		self.sheetName = self.sheetVal.get()
-		self.columnNum1 = int(self.columnVal1.get())
-		self.columnNum2 = int(self.columnVal2.get())
-		self.confLevel = int(self.confVal.get())
-		self.twoSampleTInterval(self.source, self.sheetName, self.confLevel, self.columnNum1, self.columnNum2)
-		self.top.destroy()
+		try:
+			self.source = self.srcVAL
+			self.sheetName = self.sheetVal.get()
+			self.columnNum1 = int(self.columnVal1.get())
+			self.columnNum2 = int(self.columnVal2.get())
+			self.confLevel = int(self.confVal.get())
+			self.top.destroy()
+			self.twoSampleTInterval(self.source, self.sheetName, self.confLevel, self.columnNum1, self.columnNum2)
+		except Exception as inst:
+			m.result['state'] = 'normal'
+			m.result.insert(1.0, inst)
+			m.result['state'] = 'disabled'
 
 	def twoSampleTInterval(self, src, setSheet, confidenceLevel, column1, column2):
 		try:
@@ -378,11 +398,16 @@ class OneVarStats(object):
 		self.complete.grid(row=2, column=1)
 
 	def cleanup(self):
-		self.source = self.srcVAL
-		self.sheetName = self.sheetVal.get()
-		self.column = int(self.columnVal.get())
-		self.oneVarStats(self.source, self.sheetName, self.column)
-		self.top.destroy()
+		try:
+			self.source = self.srcVAL
+			self.sheetName = self.sheetVal.get()
+			self.column = int(self.columnVal.get())
+			self.top.destroy()
+			self.oneVarStats(self.source, self.sheetName, self.column)
+		except Exception as inst:
+			m.result['state'] = 'normal'
+			m.result.insert(1.0, inst)
+			m.result['state'] = 'disabled'
 
 	def oneVarStats(self, src, setSheet, column):
 		try:
@@ -487,12 +512,17 @@ class LinReg(object):
 		self.complete.grid(row=3, column=1)
 
 	def cleanup(self):
-		self.source = self.srcVAL
-		self.sheetName = self.sheetVal.get()
-		self.column1 = int(self.columnVal1.get())
-		self.column2 = int(self.columnVal2.get())
-		self.linReg(self.source, self.sheetName, self.column1, self.column2)
-		self.top.destroy()
+		try:
+			self.source = self.srcVAL
+			self.sheetName = self.sheetVal.get()
+			self.column1 = int(self.columnVal1.get())
+			self.column2 = int(self.columnVal2.get())
+			self.top.destroy()
+			self.linReg(self.source, self.sheetName, self.column1, self.column2)
+		except Exception as inst:
+			m.result['state'] = 'normal'
+			m.result.insert(1.0, inst)
+			m.result['state'] = 'disabled'
 
 	def linReg(self, src, setSheet, column1, column2):
 		try:
@@ -561,8 +591,8 @@ class main(object):
 		self.confInt.add_command(label='One Sample T Interval', command=self.initOneSampleTInterval)
 		self.confInt.add_command(label='Two Sample T Interval', command=self.initTwoSampleTInterval)
 		# *******output area********
-		self.resultLabel = Label(master, text='Output')
-		self.result = Text(master, state='disabled')
+		self.resultLabel = ttk.Labelframe(master, text='Output')
+		self.result = Text(self.resultLabel, state='disabled')
 		self.result.insert('1.0', 'Result will be shown here')
 		self.resultLabel.pack()
 		self.result.pack()
