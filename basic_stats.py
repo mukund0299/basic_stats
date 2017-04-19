@@ -363,7 +363,7 @@ class TwoSampleTInterval(object):
 			m.result.insert(9.0, 'stDev2 = ' + str(self.sampleStDev2) + '\n')
 			m.result.insert(10.0, 'n1 = ' + str(self.n1) + '\n')
 			m.result.insert(11.0, 'n2 = ' + str(self.n2) + '\n')
-			m.result['state'] - 'disabled'
+			m.result['state'] = 'disabled'
 		except FileNotFoundError:
 			m.result.insert(1.0, 'File not Found')
 		except KeyError:
