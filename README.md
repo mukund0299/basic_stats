@@ -1,5 +1,5 @@
 # Basic Statistics Program for Python 3.6
-Designed using tkinter, this program is intended to compute basic statistical procedures such as confidence intervals, linear regressions, etc. Check wiki for description of functionality. 
+Designed using tkinter, this program is intended to compute basic statistical procedures such as confidence intervals, linear regressions, etc. from excel files where possible. Check wiki for description of functionality. 
 
 # Completed Functionality
 - One Variable Statistics
@@ -12,3 +12,4 @@ Designed using tkinter, this program is intended to compute basic statistical pr
 - One/Two Sample T Test
 - Normal Distribution operations (CDF, PDF, Inv)
 - t Distribution operations (CDF, PDF, Inv)
+- Chi Square Tests (GOF, Independence, Homogeneity)
