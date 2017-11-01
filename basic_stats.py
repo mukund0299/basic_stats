@@ -440,7 +440,7 @@ class OneVarStats(object):
 				self.medianVal = self.data[self.middleIndex]
 				self.lowerData = self.data[0:self.middleIndex]
 				self.q1Val = statistics.median(self.lowerData)
-				self.upperData = data[self.middleIndex+1:len(self.data)]
+				self.upperData = self.data[self.middleIndex+1:len(self.data)]
 				self.q3Val = statistics.median(self.upperData)
 			else:
 				self.medianVal = statistics.median(self.data)
