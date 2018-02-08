@@ -26,6 +26,9 @@ def invNorm(area):
 	#Return the upper bound value
 	return i
 
+def pCDF(upper):
+        return float(0.5*mpmath.erfc(-((upper)/mpmath.sqrt(2))))
+
 
 #t distribution
 def invt(area, df):
@@ -45,6 +48,14 @@ def invt(area, df):
 	return i
 
 
+def tCDF(upper, df):
+        if (upper <= 0):
+                x2 = (df)/((upper**2)+df)
+                return 0.5*mpmath.betainc((df/2), 0.5, 0, x2, regularized=True)
+        else:
+                x2 = (upper**2)/((upper**2)+df)
+                return 0.5*(mpmath.betainc(0.5, (df/2), 0, x2, regularized=True)+1)
+                
 def sumData(data, raiseTo):
 	dataTemp = []
 	for value in data:
