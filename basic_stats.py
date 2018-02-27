@@ -1,5 +1,4 @@
 # TODO: Test all functions
-# Test commit
 
 import openpyxl
 import mpmath
