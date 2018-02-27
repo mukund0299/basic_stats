@@ -1,46 +1,46 @@
-#TODO: Test all functions
+# TODO: Test all functions
 
 import openpyxl
 import mpmath
 import statistics
 import matplotlib
-matplotlib.use("TkAgg")
 import matplotlib.pyplot as plt
 import pylab
-
 from tkinter import *
 from tkinter import ttk
-from tkinter.filedialog import *
+import tkinter.filedialog as tkfiledialog
 
 
-#Normal Model
+# Normal Model
 def invNorm(area):
-	#Setting initial result to zero
+	# Setting initial result to zero
 	result = 0
-	#The lower bound is set to -3 because it's unlikely to have something higher than that
+	# The lower bound is set to -3 because it's unlikely to have something higher than that
 	i = -3
-	#If the result is not between area-0.0001 and area+0.0001, continue to recalculate the area with the new upper bound value
-	while (not((result >= (area-0.000001)) and (result <= (area+0.000001)))):
+	# If the result is not between area-0.0001 and area+0.0001,
+	# continue to recalculate the area with the new upper bound value
+	while not((result >= (area-0.000001)) and (result <= (area+0.000001))):
 		i += 0.00001
 		result = float(0.5*mpmath.erfc(-((i)/mpmath.sqrt(2))))
-	#Return the upper bound value
+	# Return the upper bound value
 	return i
 
+
 def pCDF(upper):
-        return float(0.5*mpmath.erfc(-((upper)/mpmath.sqrt(2))))
+	return float(0.5 * mpmath.erfc(-(upper / mpmath.sqrt(2))))
 
 
-#t distribution
+# t distribution
 def invt(area, df):
-	#Setting the initial result to zero
+	# Setting the initial result to zero
 	result = 0
-	#Starting at -4 because t values tend to go out further
+	# Starting at -4 because t values tend to go out further
 	i = -4
-	#Same as invNorm
-	while (not((result >= (area-0.000001)) and (result <= (area+0.000001)))):
+	# Same as invNorm
+	while not((result >= (area-0.000001)) and (result <= (area+0.000001))):
 		i += 0.00001
-		if (i <= 0):
-			x2 = (df)/((i**2)+df)
+		if i <= 0:
+			x2 = df / ((i ** 2) + df)
 			result = 0.5*mpmath.betainc((df/2), 0.5, 0, x2, regularized=True)
 		else:
 			x2 = (i**2)/((i**2)+df)
@@ -49,13 +49,14 @@ def invt(area, df):
 
 
 def tCDF(upper, df):
-        if (upper <= 0):
-                x2 = (df)/((upper**2)+df)
-                return 0.5*mpmath.betainc((df/2), 0.5, 0, x2, regularized=True)
-        else:
-                x2 = (upper**2)/((upper**2)+df)
-                return 0.5*(mpmath.betainc(0.5, (df/2), 0, x2, regularized=True)+1)
-                
+	if upper <= 0:
+		x2 = df / ((upper ** 2) + df)
+		return 0.5 * mpmath.betainc((df / 2), 0.5, 0, x2, regularized=True)
+	else:
+		x2 = (upper ** 2) / ((upper ** 2) + df)
+		return 0.5 * (mpmath.betainc(0.5, (df / 2), 0, x2, regularized=True) + 1)
+
+
 def sumData(data, raiseTo):
 	dataTemp = []
 	for value in data:
@@ -70,27 +71,27 @@ def sumData(data, raiseTo):
 
 class OneSampleZInterval(object):
 	def __init__(self, master):
-		#Setting up the main window and central frame
+		# Setting up the main window and central frame
 		top = self.top = Toplevel(master)
 		self.frame = Frame(top)
 		self.frame.grid(column=0, row=0, sticky=(N, W, E, S))
 		self.frame.columnconfigure(0, weight=1)
 		self.frame.rowconfigure(0, weight=1)
-		#Creating Labels for the inputs
+		# Creating Labels for the inputs
 		self.successesLabel = Label(self.frame, text='Enter number of successes')
 		self.nLabel = Label(self.frame, text='Enter size of sample')
 		self.confLabel = Label(self.frame, text='Enter confidence level (0-100)')
 		self.successesLabel.grid(row=0, sticky=E)
 		self.nLabel.grid(row=1, sticky=E)
 		self.confLabel.grid(row=2, sticky=E)
-		#Creating input dialogs and gridding them
+		# Creating input dialogs and gridding them
 		self.successesInput = Entry(self.frame)
 		self.nInput = Entry(self.frame)
 		self.confInput = Entry(self.frame)
 		self.successesInput.grid(row=0, column=1)
 		self.nInput.grid(row=1, column=1)
 		self.confInput.grid(row=2, column=1)
-		#Creating Button to retrieve all values
+		# Creating Button to retrieve all values
 		self.complete = Button(self.frame, text='Submit', command=self.cleanup)
 		self.complete.grid(columnspan=2)
 
@@ -108,14 +109,14 @@ class OneSampleZInterval(object):
 
 	def oneSampleZInterval(self, successes, n, confidenceLevel):
 		try:
-			#Setting the output to normal then clearing it
+			# Setting the output to normal then clearing it
 			m.result['state'] = 'normal'
 			m.result.delete(1.0, END)
-			#Calculating p from the sample
+			# Calculating p from the sample
 			self.pHat = successes/n
-			#Getting Critical value
+			# Getting Critical value
 			self.zCritical = -1*invNorm((1-(confidenceLevel/100))/2)
-			#Getting Standard deviation
+			# Getting Standard deviation
 			self.stDev = float(mpmath.sqrt(((self.pHat)*(1-self.pHat))/(n)))
 			self.marError = self.stDev*self.zCritical
 			self.CLower = self.pHat - self.marError
@@ -132,13 +133,13 @@ class OneSampleZInterval(object):
 
 class TwoSampleZInterval(object):
 	def __init__(self, master):
-		#Setting up the main window and central frame
+		# Setting up the main window and central frame
 		top = self.top = Toplevel(master)
 		self.frame = Frame(top)
 		self.frame.grid(column=0, row=0, sticky=(N, W, E, S))
 		self.frame.columnconfigure(0, weight=1)
 		self.frame.rowconfigure(0, weight=1)
-		#Creating Labels for the inputs
+		# Creating Labels for the inputs
 		self.successesLabel1 = Label(self.frame, text='Enter number of successes for sample 1')
 		self.nLabel1 = Label(self.frame, text='Enter size of sample 1')
 		self.successesLabel2 = Label(self.frame, text='Enter number of successes for sample 2')
@@ -149,7 +150,7 @@ class TwoSampleZInterval(object):
 		self.successesLabel2.grid(row=2, sticky=E)
 		self.nLabel2.grid(row=3, sticky=E)
 		self.confLabel.grid(row=4, sticky=E)
-		#Creating input dialogs and gridding them
+		# Creating input dialogs and gridding them
 		self.successesInput1 = Entry(self.frame)
 		self.nInput1 = Entry(self.frame)
 		self.successesInput2 = Entry(self.frame)
@@ -160,7 +161,7 @@ class TwoSampleZInterval(object):
 		self.successesInput2.grid(row=2, column=1)
 		self.nInput2.grid(row=3, column=1)
 		self.confInput.grid(row=4, column=1)
-		#Creating Button to retrieve all values
+		# Creating Button to retrieve all values
 		self.complete = Button(self.frame, text='Submit', command=self.cleanup)
 		self.complete.grid(row=5, column=1)
 
@@ -180,17 +181,17 @@ class TwoSampleZInterval(object):
 
 	def twoSampleZInterval(self, successes1, n1, successes2, n2, confidenceLevel):
 		try:
-			#Setting the output to normal then clearing it
+			# Setting the output to normal then clearing it
 			m.result['state'] = 'normal'
 			m.result.delete(1.0, END)
-			#Calculating p from the samples
+			# Calculating p from the samples
 			self.pHat1 = successes1/n1
 			self.pHat2 = successes2/n2
-			#Getting the difference in p
+			# Getting the difference in p
 			self.pDiff = self.pHat1-self.pHat2
-			#Getting critical value
+			# Getting critical value
 			self.zCritical = -1*invNorm((1-(confidenceLevel/100))/2)
-			#Getting Standard error
+			# Getting Standard error
 			self.stDev = mpmath.sqrt((((self.pHat1)*(1-self.pHat1))/n1) + (((self.pHat2)*(1-self.pHat2))/n2))
 			self.marError = self.zCritical*self.stDev
 			self.CLower = self.pDiff - self.marError
@@ -205,33 +206,35 @@ class TwoSampleZInterval(object):
 		except Exception as inst:
 			m.result.insert(1.0, inst)
 
-#Confidence Intervals for means; reading from an excel file
+
+# Confidence Intervals for means; reading from an excel file
 class OneSampleTInterval(object):
 	def __init__(self, master):
-		#Setting up the main window and central frame
+		# Setting up the main window and central frame
 		top = self.top = Toplevel(master)
 		self.frame = Frame(top)
 		self.frame.grid(column=0, row=0, sticky=(N, W, E, S))
 		self.frame.columnconfigure(0, weight=1)
 		self.frame.rowconfigure(0, weight=1)
-		#Creating Labels for the inputs
+		# Creating Labels for the inputs
 		self.sheetLabel = Label(self.frame, text='Enter the name of the sheet')
 		self.columnLabel1 = Label(self.frame, text='Enter column number')
 		self.confLabel = Label(self.frame, text='Enter confidence level (0-100)')
 		self.sheetLabel.grid(row=0, sticky=E)
 		self.columnLabel1.grid(row=1, sticky=E)
 		self.confLabel.grid(row=2, sticky=E)
-		#Creating inputs
-		self.srcVAL = filedialog.askopenfilename(title="Locate Excel file", filetypes=(("excel files", "*.xlsx"), ("all files", "*.*")))
+		# Creating inputs
+		self.srcVAL = tkfiledialog.askopenfilename(title="Locate Excel file", filetypes=(("excel files", "*.xlsx"), ("all files", "*.*")))
 		self.sheetVal = Entry(self.frame)
 		self.sheetVal.grid(row=0, column=1)
 		self.columnVal1 = Entry(self.frame)
 		self.columnVal1.grid(row=1, column=1)
 		self.confVal = Entry(self.frame)
 		self.confVal.grid(row=2, column=1)
-		#Creating Button to retrieve all values
+		# Creating Button to retrieve all values
 		self.complete = Button(self.frame, text='Submit', command=self.cleanup)
 		self.complete.grid(row=3, column=1)
+
 	def cleanup(self):
 		try:
 			self.source = self.srcVAL
@@ -247,25 +250,25 @@ class OneSampleTInterval(object):
 
 	def oneSampleTInterval(self, src, setSheet, confidenceLevel, column):
 		try:
-			#Setting the output to normal then clearing it
+			# Setting the output to normal then clearing it
 			m.result['state'] = 'normal'
 			m.result.delete(1.0, END)
-			#Opening the workbook and setting the sheet
+			# Opening the workbook and setting the sheet
 			self.wb = openpyxl.load_workbook(src)
 			self.sheet = self.wb.get_sheet_by_name(setSheet)
-			#Getting a list of the cells in order to calculate length
+			# Getting a list of the cells in order to calculate length
 			self.dataList = list(self.sheet.columns)[column]
-			#Populating a list with data from the cells
+			# Populating a list with data from the cells
 			self.data = []
 			for cellObj in self.dataList:
 				self.data.append(float(cellObj.value))
-			#Getting mean,Standard Deviation,n and df
+			# Getting mean,Standard Deviation,n and df
 			self.mean = statistics.mean(self.data)
 			self.sampleStDev = statistics.stdev(self.data)
 			self.n = len(self.dataList)
 			self.df = self.n-1
 			self.stDev = (self.sampleStDev)/(mpmath.sqrt(self.n))
-			#Getting critical value
+			# Getting critical value
 			self.tCritical = -1*invt(((1-(confidenceLevel/100))/2), self.df)
 			self.stError = self.stDev*self.tCritical
 			self.CLower = self.mean - self.stError
@@ -286,15 +289,16 @@ class OneSampleTInterval(object):
 		except Exception as inst:
 			m.result.insert(1.0, inst)
 
+
 class TwoSampleTInterval(object):
 	def __init__(self, master):
-		#Setting up the main window and central frame
+		# Setting up the main window and central frame
 		top = self.top = Toplevel(master)
 		self.frame = Frame(top)
 		self.frame.grid(column=0, row=0, sticky=(N, W, E, S))
 		self.frame.columnconfigure(0, weight=1)
 		self.frame.rowconfigure(0, weight=1)
-		#Creating Labels for the inputs
+		# Creating Labels for the inputs
 		self.sheetLabel = Label(self.frame, text='Enter the name of the sheet')
 		self.columnLabel1 = Label(self.frame, text='Enter column number 1')
 		self.columnLabel2 = Label(self.frame, text='Enter column number 2')
@@ -303,8 +307,8 @@ class TwoSampleTInterval(object):
 		self.columnLabel1.grid(row=1, sticky=E)
 		self.columnLabel1.grid(row=2, sticky=E)
 		self.confLabel.grid(row=3, sticky=E)
-		#Creating inputs
-		self.srcVAL = filedialog.askopenfilename(title="Locate Excel file", filetypes=(("excel files", "*.xlsx"), ("all files", "*.*")))
+		# Creating inputs
+		self.srcVAL = tkfiledialog.askopenfilename(title="Locate Excel file", filetypes=(("excel files", "*.xlsx"), ("all files", "*.*")))
 		self.sheetVal = Entry(self.frame)
 		self.sheetVal.grid(row=0, column=1)
 		self.columnVal1 = Entry(self.frame)
@@ -313,7 +317,7 @@ class TwoSampleTInterval(object):
 		self.columnVal2.grid(row=2, column=1)
 		self.confVal = Entry(self.frame)
 		self.confVal.grid(row=3, column=1)
-		#Creating Button to retrieve all values
+		# Creating Button to retrieve all values
 		self.complete = Button(self.frame, text='Submit', command=self.cleanup)
 		self.complete.grid(row=4, column=1)
 
@@ -333,19 +337,19 @@ class TwoSampleTInterval(object):
 
 	def twoSampleTInterval(self, src, setSheet, confidenceLevel, column1, column2):
 		try:
-			#Opening the workbook and setting the sheet
+			# Opening the workbook and setting the sheet
 			self.wb = openpyxl.load_workbook(src)
 			self.sheet = self.wb.get_sheet_by_name(setSheet)
-			#Getting a list of the cells in order to calculate length
+			# Getting a list of the cells in order to calculate length
 			self.dataList1 = list(self.sheet.columns)[column1]
 			self.dataList2 = list(self.sheet.columns)[column2]
-			#Populating a list with data from the cells
+			# Populating a list with data from the cells
 			self.data1, self.data2 = [], []
 			for cellObj in self.dataList1:
 				self.data1.append(float(cellObj.value))
 			for cellObj in self.dataList2:
 				self.data2.append(float(cellObj.value))
-			#Getting mean, Standard Deviation, n and df for both samples
+			# Getting mean, Standard Deviation, n and df for both samples
 			self.mean1 = statistics.mean(self.data1)
 			self.sampleStDev1 = statistics.stdev(self.data1)
 			self.n1 = len(self.dataList1)
@@ -355,10 +359,10 @@ class TwoSampleTInterval(object):
 			self.n2 = len(self.dataList2)
 			self.df2 = self.n2-1
 			self.meanDiff = self.mean1-self.mean2
-			#BUG: The df calculation is wrong
+			# TODO: The df calculation is wrong
 			self.df = (self.n1+self.n2)-2
 			self.stDev = float(mpmath.sqrt(((self.sampleStDev1**2)/self.n1)+((self.sampleStDev2**2)/self.n2)))
-			#Getting critical value
+			# Getting critical value
 			self.tCritical = -1*invt(((1-(confidenceLevel/100))/2), self.df)
 			self.stError = self.stDev*self.tCritical
 			self.CLower = self.meanDiff - self.stError
@@ -387,24 +391,24 @@ class TwoSampleTInterval(object):
 
 class OneVarStats(object):
 	def __init__(self, master):
-		#Setting up the main window and central frame
+		# Setting up the main window and central frame
 		top = self.top = Toplevel(master)
 		self.frame = Frame(top)
 		self.frame.grid(column=0, row=0, sticky=(N, W, E, S))
 		self.frame.columnconfigure(0, weight=1)
 		self.frame.rowconfigure(0, weight=1)
-		#Creating Labels for the inputs
+		# Creating Labels for the inputs
 		self.sheetLabel = Label(self.frame, text='Enter the name of the sheet')
 		self.columnLabel = Label(self.frame, text='Enter column number')
 		self.sheetLabel.grid(row=0, sticky=E)
 		self.columnLabel.grid(row=1, sticky=E)
-		#Creating inputs
-		self.srcVAL = filedialog.askopenfilename(title="Locate Excel file", filetypes=(("excel files", "*.xlsx"), ("all files", "*.*")))
+		# Creating inputs
+		self.srcVAL = tkfiledialog.askopenfilename(title="Locate Excel file", filetypes=(("excel files", "*.xlsx"), ("all files", "*.*")))
 		self.sheetVal = Entry(self.frame)
 		self.sheetVal.grid(row=0, column=1)
 		self.columnVal = Entry(self.frame)
 		self.columnVal.grid(row=1, column=1)
-		#Creating Button to retrieve all values
+		# Creating Button to retrieve all values
 		self.complete = Button(self.frame, text='Submit', command=self.cleanup)
 		self.complete.grid(row=2, column=1)
 
@@ -422,15 +426,15 @@ class OneVarStats(object):
 
 	def oneVarStats(self, src, setSheet, column):
 		try:
-			#Setting the output to normal then clearing it
+			# Setting the output to normal then clearing it
 			m.result['state'] = 'normal'
 			m.result.delete(1.0, END)
-			#Opening the workbook and setting the sheet
+			# Opening the workbook and setting the sheet
 			self.wb = openpyxl.load_workbook(src)
 			self.sheet = self.wb.get_sheet_by_name(setSheet)
-			#Getting a list of the cells in order to calculate length
+			# Getting a list of the cells in order to calculate length
 			self.dataList = list(self.sheet.columns)[column]
-			#Populating a list with data from the cells
+			# Populating a list with data from the cells
 			self.data = []
 			for cellObj in self.dataList:
 				self.data.append(float(cellObj.value))
@@ -440,13 +444,13 @@ class OneVarStats(object):
 			self.n = len(self.data)
 			self.sumOfValues = sumData(self.data, 1)
 			self.sumOfValuesSquared = sumData(self.data, 2)
-			#Five Number summary
+			# Five Number summary
 			self.data.sort()
 			self.minVal = self.data[0]
 			self.q1Val, self.medianVal, self.q3Val = 0, 0, 0
 			self.maxVal = self.data[len(self.data)-1]
-			#If the data has odd number of values
-			if (len(self.data) % 2 != 0):
+			# If the data has odd number of values
+			if len(self.data) % 2 != 0:
 				self.middleIndex = (len(self.data)-1)//2
 				self.medianVal = self.data[self.middleIndex]
 				self.lowerData = self.data[0:self.middleIndex]
@@ -459,18 +463,18 @@ class OneVarStats(object):
 				self.q1Val = statistics.median(self.lowerData)
 				self.upperData = self.data[len(self.data)//2:len(self.data)]
 				self.q3Val = statistics.median(self.upperData)
-			#Sum of squared deviations
+			# Sum of squared deviations
 			self.ssx = 0
 			for value in self.data:
 				self.ssx += (value-self.mean)**2
-			#Histogram and Boxplot
+			# Histogram and Boxplot
 			self.fig = plt.figure()
 			self.ax = self.fig.add_subplot(111)
 			self.ax.hist(self.data)
 			self.fig2 = plt.figure()
 			self.ax2 = self.fig2.add_subplot(111)
 			self.ax2.boxplot(self.data)
-			#Appending results to output box
+			# Appending results to output box
 			m.result.insert(1.0, 'Mean = ' + str(self.mean) + '\n')
 			m.result.insert(2.0, 'Sum of x = ' + str(self.sumOfValues) + '\n')
 			m.result.insert(3.0, 'Sum of squared x = ' + str(self.sumOfValuesSquared) + '\n')
@@ -497,28 +501,28 @@ class OneVarStats(object):
 
 class LinReg(object):
 	def __init__(self, master):
-		#Setting up the main window and central frame
+		# Setting up the main window and central frame
 		top = self.top = Toplevel(master)
 		self.frame = Frame(top)
 		self.frame.grid(column=0, row=0, sticky=(N, W, E, S))
 		self.frame.columnconfigure(0, weight=1)
 		self.frame.rowconfigure(0, weight=1)
-		#Creating Labels for the inputs
+		# Creating Labels for the inputs
 		self.sheetLabel = Label(self.frame, text='Enter the name of the sheet')
 		self.columnLabel1 = Label(self.frame, text='Enter column number 1')
 		self.columnLabel2 = Label(self.frame, text='Enter column number 2')
 		self.sheetLabel.grid(row=0, sticky=E)
 		self.columnLabel1.grid(row=1, sticky=E)
 		self.columnLabel2.grid(row=2, sticky=E)
-		#Creating inputs
-		self.srcVAL = filedialog.askopenfilename(title="Locate Excel file", filetypes=(("excel files", "*.xlsx"), ("all files", "*.*")))
+		# Creating inputs
+		self.srcVAL = tkfiledialog.askopenfilename(title="Locate Excel file", filetypes=(("excel files", "*.xlsx"), ("all files", "*.*")))
 		self.sheetVal = Entry(self.frame)
 		self.sheetVal.grid(row=0, column=1)
 		self.columnVal1 = Entry(self.frame)
 		self.columnVal1.grid(row=1, column=1)
 		self.columnVal2 = Entry(self.frame)
 		self.columnVal2.grid(row=2, column=1)
-		#Creating Button to retrieve all values
+		# Creating Button to retrieve all values
 		self.complete = Button(self.frame, text='Submit', command=self.cleanup)
 		self.complete.grid(row=3, column=1)
 
@@ -537,22 +541,22 @@ class LinReg(object):
 
 	def linReg(self, src, setSheet, column1, column2):
 		try:
-			#Setting the output to normal then clearing it
+			# Setting the output to normal then clearing it
 			m.result['state'] = 'normal'
 			m.result.delete(1.0, END)
-			#Opening the workbook and setting the sheet
+			# Opening the workbook and setting the sheet
 			self.wb = openpyxl.load_workbook(src)
 			self.sheet = self.wb.get_sheet_by_name(setSheet)
-			#Getting a list of the cells in order to calculate length
+			# Getting a list of the cells in order to calculate length
 			self.dataList1 = list(self.sheet.columns)[column1]
 			self.dataList2 = list(self.sheet.columns)[column2]
-			#Populating a list with data from the cells
+			# Populating a list with data from the cells
 			self.data1, self.data2 = [], []
 			for cellObj in self.dataList1:
 				self.data1.append(float(cellObj.value))
 			for cellObj in self.dataList2:
 				self.data2.append(float(cellObj.value))
-			if (len(self.data1) != len(self.data2)):
+			if len(self.data1) != len(self.data2):
 				raise Exception('Data is not of equal n')
 			(self.m, self.b) = pylab.polyfit(self.data1, self.data2, 1)
 			self.yp = pylab.polyval([self.m, self.b], self.data1)
@@ -582,7 +586,7 @@ class LinReg(object):
 			m.result.insert(1.0, inst)
 
 
-class main(object):
+class Main(object):
 	def __init__(self, master):
 		self.master = master
 		# *******Menu Bar********
@@ -637,5 +641,5 @@ class main(object):
 root = Tk()
 root.title('Basic Statistics')
 root.geometry('400x300')
-m = main(root)
+m = Main(root)
 root.mainloop()
